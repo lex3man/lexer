@@ -1,4 +1,4 @@
-from components import api_connector
+from components import api_connector, bot_starter
 import asyncio, logging
 
 async def start_bots(bots_names: list):
@@ -7,6 +7,8 @@ async def start_bots(bots_names: list):
         api_token = bot_info[bot_name]['token']
         
         # запуск бота
+        path = '/' + bot_name + '/'
+        await bot_starter.start_webhook(api_token, path)
 
         await asyncio.sleep(1)
         print(f'{bot_name} started')
