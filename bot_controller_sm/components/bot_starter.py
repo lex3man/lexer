@@ -2,6 +2,7 @@ from aiogram import Bot
 from aiogram.dispatcher import Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
+from aiogram.utils import executor
 
 def BotDp(token):
     bot = Bot(token)
@@ -9,13 +10,6 @@ def BotDp(token):
     dp.middleware.setup(LoggingMiddleware())
     return dp
 
-def start_webhook(token, WEBHOOK_URL_PATH):
-    start_webhook(
-        dispatcher = BotDp(token),
-        webhook_path = WEBHOOK_URL_PATH,
-        on_startup = on_startup,
-        on_shutdown = on_shutdown,
-        skip_updates = True,
-        host = 'localhost',
-        port = 3002
-    )
+def start_polling(token, set_loop):
+    dp = BotDp(token)
+    executor.start_polling(dispatcher = dp, loop = set_loop) 

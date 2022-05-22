@@ -1,15 +1,13 @@
 from components import api_connector, bot_starter
-import asyncio, logging
+import asyncio, logging, requests
 
-async def start_bots(bots_names: list):
+async def start_bots(bots_names: list, auth_token):
     for bot_name in bots_names:
-        bot_info = await api_connector.AsyncGetBotInfo(bot_name)
+        bot_info = await api_connector.AsyncGetBotInfo(bot_name, auth_token)
         api_token = bot_info[bot_name]['token']
         
         # запуск бота
-        path = '/' + bot_name + '/'
-        await bot_starter.start_webhook(api_token, path)
-
+        
         await asyncio.sleep(1)
         print(f'{bot_name} started')
 
@@ -20,10 +18,10 @@ async def stop_bots(bots_names: list):
 
         print(f'{bot_name} stoped')
 
-async def main():
+async def main(auth_token):
     bots_names = []
     while True:
-        bots_info = await api_connector.AsyncGetBotInfo('all')
+        bots_info = await api_connector.AsyncGetBotInfo('all', auth_token)
         active_bots_names = []
         changes = {'added':'', 'removed':''}
         for k in bots_info.keys():
@@ -36,12 +34,18 @@ async def main():
             bots_names = active_bots_names
             print('bots list updated')
             if changes['added'] != '':
-                asyncio.create_task(start_bots(changes['added']))
+                asyncio.create_task(start_bots(changes['added'], auth_token))
                 print('Added ' + str(changes['added']))
             if changes['removed'] != '':
                 asyncio.create_task(stop_bots(changes['removed']))
                 print('Removed ' + str(changes['removed']))
 
 if __name__ == '__main__':
+    
+    login = input('Enter login: ')
+    passwd = input('Enter password: ')
+    resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})
+    auth_token = resp.json()['access_token']
+    
     logging.basicConfig(level = logging.INFO)
-    asyncio.run(main())
+    asyncio.run(main(auth_token))
