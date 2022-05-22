@@ -1,20 +1,30 @@
-from components import api_connector, bot_starter
+from components import api_connector
 import asyncio, logging, requests
+import subprocess
+
+RUNNING_BOTS = {'status':'OK'}
+BOT_INIT_SCRIPT = '/var/www/dev.insiderlab.ru/bot_controller_sm/components/bot_starter.py'
 
 async def start_bots(bots_names: list, auth_token):
+    global RUNNING_BOTS
     for bot_name in bots_names:
         bot_info = await api_connector.AsyncGetBotInfo(bot_name, auth_token)
         api_token = bot_info[bot_name]['token']
         
         # запуск бота
+        bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token])
+        RUNNING_BOTS.update({bot_name:bot_process})
         
         await asyncio.sleep(1)
         print(f'{bot_name} started')
 
 async def stop_bots(bots_names: list):
+    global RUNNING_BOTS
     for bot_name in bots_names:
         
         # остановка бота
+        bot_process = RUNNING_BOTS[bot_name]
+        bot_process.terminate()
 
         print(f'{bot_name} stoped')
 
@@ -42,7 +52,7 @@ async def main(auth_token):
 
 if __name__ == '__main__':
     
-    login = input('Enter login: ')
+    login = 'lex3man'
     passwd = input('Enter password: ')
     resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})
     auth_token = resp.json()['access_token']
