@@ -12,10 +12,9 @@ async def start_bots(bots_names: list, auth_token):
         api_token = bot_info[bot_name]['token']
         
         # запуск бота
-        bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token])
+        bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token, auth_token])
         RUNNING_BOTS.update({bot_name:bot_process})
-        
-        await asyncio.sleep(1)
+        await asyncio.sleep(2)
         print(f'{bot_name} started')
 
 async def stop_bots(bots_names: list):
@@ -25,7 +24,6 @@ async def stop_bots(bots_names: list):
         # остановка бота
         bot_process = RUNNING_BOTS[bot_name]
         bot_process.terminate()
-
         print(f'{bot_name} stoped')
 
 async def main(auth_token):
@@ -51,11 +49,16 @@ async def main(auth_token):
                 print('Removed ' + str(changes['removed']))
 
 if __name__ == '__main__':
-    
     login = 'lex3man'
-    passwd = input('Enter password: ')
-    resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})
-    auth_token = resp.json()['access_token']
+    while True:
+        passwd = input('Enter password: ')
+        resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})
+        try: 
+            resp.json()['token_type'] == 'Bearer'
+            print('Service started...')
+            break
+        except: pass
     
+    auth_token = resp.json()['access_token']
     logging.basicConfig(level = logging.INFO)
     asyncio.run(main(auth_token))
