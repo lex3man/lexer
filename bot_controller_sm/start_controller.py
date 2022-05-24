@@ -1,6 +1,8 @@
 from components import api_connector
 import asyncio, logging, requests
 import subprocess
+from sys import argv
+
 
 RUNNING_BOTS = {'status':'OK'}
 BOT_INIT_SCRIPT = '/var/www/dev.insiderlab.ru/bot_controller_sm/components/bot_starter.py'
@@ -12,7 +14,7 @@ async def start_bots(bots_names: list, auth_token):
         api_token = bot_info[bot_name]['token']
         
         # запуск бота
-        bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token, auth_token])
+        bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token, auth_token, bot_name])
         RUNNING_BOTS.update({bot_name:bot_process})
         await asyncio.sleep(2)
         print(f'{bot_name} started')
@@ -49,7 +51,8 @@ async def main(auth_token):
                 print('Removed ' + str(changes['removed']))
 
 if __name__ == '__main__':
-    login = 'lex3man'
+    
+    login = argv[1]
     while True:
         passwd = input('Enter password: ')
         resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})

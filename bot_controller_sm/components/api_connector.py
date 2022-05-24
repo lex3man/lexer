@@ -2,6 +2,29 @@ import aiohttp, requests
 
 SERVER_HOST = 'dev.insiderlab.ru'
 
+def GetContent(bot_name, auth_token, target):
+    head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}
+    PATH = '/content/'
+    SERVER_URL = 'https://' + SERVER_HOST + PATH
+    data = {
+        'botname':bot_name,
+        'head':target
+    }
+    resp_api = requests.get(SERVER_URL, params = data, headers = head)
+    return resp_api.json()
+
+async def AsyncGetContent(bot_name, auth_token, target):
+    head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}
+    PATH = '/content/'
+    SERVER_URL = 'https://' + SERVER_HOST + PATH
+    data = {
+        'botname':bot_name,
+        'head':target
+    }
+    async with aiohttp.ClientSession(headers = head) as session:
+        async with session.get(SERVER_URL, params = data) as resp:
+            response = resp.json()
+            return response
 
 def GetBotInfo(bot_name : str, auth_token):
     PATH = '/API_v1/bot/'
