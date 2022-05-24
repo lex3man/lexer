@@ -35,7 +35,7 @@ class keyboard(models.Model):
         verbose_name_plural = 'Клавиатуры'
     
     def __str__(self):
-        return self.language + ' / ' + self.caption
+        return self.caption 
 
 class Command(models.Model):
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)

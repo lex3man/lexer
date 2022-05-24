@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../lexer.insiderlab.ru"
 		}
 	],
 	"settings": {}

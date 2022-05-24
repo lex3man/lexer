@@ -1,6 +1,7 @@
 from aiogram import Dispatcher, types
 from api_connector import GetContent, AsyncGetContent
-import requests
+from keyboard_creator import create_keyboard
+from aiogram.types import ReplyKeyboardRemove
 
 SERVER_HOST = 'dev.insiderlab.ru'
 
@@ -14,12 +15,15 @@ def MakeCommandList(auth_token, bot_name):
         commands_list.append(k)
     return commands_list
 
-async def command_react(message : types.Message, *args, **kwargs):
+async def command_react(message : types.Message):
     global AT, BN
     commands_info = GetContent(BN, AT, 'commands')
     cmd = message.text.replace('/','')
     text = commands_info['commands'][cmd]['text']
-    await message.answer(text)
+    kb = ReplyKeyboardRemove()
+    if commands_info['commands'][cmd]['keyboard'] != 'null':
+        kb = await create_keyboard(BN, AT, commands_info['commands'][cmd]['keyboard'], message.from_user.id)
+    await message.answer(text, reply_markup = kb)
 
 def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     global AT, BN
