@@ -48,12 +48,26 @@ async def AsyncAddUser(bot_name, auth_token, data):
     head = {'Authorization': 'Bearer ' + auth_token}
     push_params = {
         'bot_name':bot_name,
-        'head':'new_start',
+        'head':'new_user_start',
         'usr_id':data['usr_id'],
         'teleg':data['teleg'],
+        'usr_name':data['usr_name'],
         'usr_tag':data['usr_tag']
     }
     async with aiohttp.ClientSession(headers = head) as session:
-        async with session.get(SERVER_URL, params = push_params) as resp:
+        async with session.post(SERVER_URL, json = push_params) as resp:
+            response = await resp.json()
+            return response
+        
+async def AsyncGetUserInfo(bot_name, auth_token, user_id):
+    PATH = '/users_api/get_user/'
+    SERVER_URL = 'https://' + SERVER_HOST + PATH
+    head = {'Authorization': 'Bearer ' + auth_token}
+    data = {
+        'head':'user',
+        'user_id':user_id
+    }
+    async with aiohttp.ClientSession(headers = head) as session:
+        async with session.get(SERVER_URL, params = data) as resp:
             response = await resp.json()
             return response
