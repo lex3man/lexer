@@ -69,6 +69,13 @@ class CreateUser(View):
                     'prefix':pref,
                     'ref':'None'
                 })
+                if pref != 'None':
+                    new_var = Var(
+                        user = user,
+                        key = 'pref',
+                        value = pref
+                    )
+                    new_var.save()
                 if ref_code != 'None':
                     try:
                         parent = User.objects.get(ref_code = ref_code)
@@ -103,6 +110,7 @@ class CreateUser(View):
                     info.update({'from_bot':user.from_bot.caption})
                     info.update({'tags':[tag.tag_id for tag in user.tags.all()]})
                     data.update({
+                        'status':'OK',
                         'msg':'Done',
                         user.tg_ID:info
                     })
