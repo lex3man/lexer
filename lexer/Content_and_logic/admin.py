@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import keyboard_button, keyboard, Command
+from .models import keyboard_button, keyboard, Command, Condition
 
 class KeyboardButtonsAdmin(admin.ModelAdmin):
     list_display = ('caption', 'text', 'language', 'order', 'from_bot')
@@ -18,3 +18,4 @@ class CommandAdmin(admin.ModelAdmin):
 admin.site.register(keyboard_button, KeyboardButtonsAdmin)
 admin.site.register(keyboard, KeyboardAdmin)
 admin.site.register(Command, CommandAdmin)
+admin.site.register(Condition)

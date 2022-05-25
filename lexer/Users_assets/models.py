@@ -1,4 +1,5 @@
 from datetime import date
+from tabnanny import verbose
 from django.db import models
 from core.models import TgBot
 
@@ -16,7 +17,8 @@ class UserTag(models.Model):
         return self.caption
 
 class User(models.Model):
-    tg_ID = models.CharField(verbose_name = 'Телеграм ID', max_length = 15, unique = True)
+    user_ID = models.CharField(verbose_name = 'ID', max_length = 15, unique = True)
+    tg_ID = models.CharField(verbose_name = 'Телеграм ID', max_length = 15)
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
     name = models.CharField(verbose_name = 'Имя', max_length = 50, default = '', null = True, blank = True)
     tg_nickname = models.CharField(verbose_name = 'Nickname в телеграм', max_length = 50)
@@ -37,4 +39,29 @@ class User(models.Model):
         verbose_name = 'Собеседник'
 
     def __str__(self):
-        return self.name + ' (' + self.tg_nickname + ')'
+        return f'{self.name} ({self.tg_ID}/{self.tg_nickname})' # self.name + ' (' + self.tg_nickname + ')'
+
+class RefLink(models.Model):
+    caption = models.CharField(verbose_name = 'Наименование', max_length = 50)
+    date = models.DateTimeField(verbose_name = 'Время активации', auto_now = False, auto_now_add = False)
+    parent = models.ForeignKey(User, verbose_name = 'Пригласил', on_delete = models.CASCADE, related_name = 'parent')
+    child = models.ForeignKey(User, verbose_name = 'Активировал', on_delete = models.CASCADE, related_name = 'child')
+    
+    def __str__(self):
+        return self.caption
+    
+    class Meta:
+        verbose_name = 'Связь'
+        verbose_name_plural = 'Связи'
+
+class Var(models.Model):
+    user = models.ForeignKey(User, verbose_name = 'Собеседник', on_delete = models.CASCADE)
+    key = models.CharField(verbose_name = 'Переменная (латиницей)', max_length = 50)
+    value = models.CharField(verbose_name = 'Значение', max_length = 150)
+    
+    def __str__(self):
+        return self.key
+    
+    class Meta:
+        verbose_name = 'Переменная'
+        verbose_name_plural = 'Переменные'
