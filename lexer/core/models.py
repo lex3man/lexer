@@ -1,4 +1,3 @@
-from pyexpat import model
 from django.db import models
 
 class EnvVar(models.Model):
@@ -14,7 +13,7 @@ class EnvVar(models.Model):
         verbose_name_plural = 'Переменные окружения'
 
 class TgBot(models.Model):
-    caption = models.CharField(verbose_name = 'Наименование бота', max_length = 50)
+    caption = models.CharField(verbose_name = 'Наименование бота', max_length = 50, unique = True)
     description = models.CharField(verbose_name = 'Описание', max_length = 150, blank = True, null = True)
     url = models.CharField(verbose_name = 'Ссылка на бота', max_length = 150)
     token = models.CharField(verbose_name = 'API token телеграм бота', max_length = 150)

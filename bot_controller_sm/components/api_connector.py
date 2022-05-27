@@ -8,7 +8,8 @@ def GetContent(bot_name, auth_token, target):
     SERVER_URL = 'https://' + SERVER_HOST + PATH
     data = {
         'botname':bot_name,
-        'head':target
+        'head':target,
+        'block':''
     }
     resp_api = requests.get(SERVER_URL, params = data, headers = head)
     return resp_api.json()
@@ -17,10 +18,18 @@ async def AsyncGetContent(bot_name, auth_token, target):
     head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}
     PATH = '/content/'
     SERVER_URL = 'https://' + SERVER_HOST + PATH
-    data = {
-        'botname':bot_name,
-        'head':target
-    }
+    if type(target) == str:
+        data = {
+            'botname':bot_name,
+            'head':target,
+            'block':''
+        }
+    elif type(target) == list:
+        data = {
+            'botname':bot_name,
+            'head':target[0],
+            'block':target[1]
+        }
     async with aiohttp.ClientSession(headers = head) as session:
         async with session.get(SERVER_URL, params = data) as resp:
             response = resp.json()
@@ -59,12 +68,12 @@ async def AsyncAddUser(bot_name, auth_token, data):
             response = await resp.json()
             return response
         
-async def AsyncGetUserInfo(bot_name, auth_token, user_id):
+async def AsyncGetUserInfo(bot_name, auth_token, user_id, target):
     PATH = '/users_api/get_user/'
     SERVER_URL = 'https://' + SERVER_HOST + PATH
     head = {'Authorization': 'Bearer ' + auth_token}
     data = {
-        'head':'user',
+        'head':target,
         'user_id':user_id
     }
     async with aiohttp.ClientSession(headers = head) as session:

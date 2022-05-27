@@ -27,7 +27,7 @@ class User(models.Model):
     parent_ref_code = models.CharField(verbose_name = 'Родительский рефкод', max_length = 50, default = '', editable = False)
     ping_stat = models.BooleanField(verbose_name = 'Доступность', default = True)
     ref_code = models.CharField(verbose_name = 'Реферальный код', max_length = 10, default = 'markschool', editable = False, unique = True)
-    tags = models.ManyToManyField(UserTag, verbose_name = 'Теги')
+    tags = models.ManyToManyField(UserTag, verbose_name = 'Теги', blank = True)
     
     
     def set_active(self):

@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-from .models import keyboard, keyboard_button, Command
+from .models import keyboard, keyboard_button, Command, FirstTouch
 from core.models import TgBot
 from core.views import auth_check
 
@@ -27,7 +27,41 @@ class Get_content(View):
                     fields_info = keyboard_button._meta.get_fields()
                 case 'commands': 
                     items = Command.objects.filter(from_bot = exec_bot)
+                    fts = FirstTouch.objects.filter(from_bot = exec_bot)
                     fields_info = Command._meta.get_fields()
+                    conditions = {}
+                    for item in items:
+                        info = {}
+                        for item_cond in item.conditions.all():
+                            try: 
+                                tag = item_cond.usr_tag
+                                t_id = tag.tag_id
+                            except: t_id = "None"
+                            info.update({item_cond.name:{
+                                'var_key':item_cond.var_key,
+                                'qual':item_cond.qual,
+                                'var_value':item_cond.var_value,
+                                'usr_tag':t_id,
+                                'failed_text':item_cond.failed_text
+                            }})
+                        conditions.update({item.caption:info})
+                    first_touch = {}
+                    for ft in fts:
+                        try: kb_name = ft.keyboard.name
+                        except: kb_name = 'None'
+                        info = {
+                            'text':ft.text,
+                            'keyboard':kb_name,
+                            'input_state':ft.input_state,
+                            'next_block':ft.next_block
+                        }
+                        first_touch.update({
+                            ft.language:info
+                        })
+                    data.update({
+                        'conditions':conditions,
+                        'first_touch':first_touch
+                    })
                 case 'keyboard':
                     keyboards = keyboard.objects.filter(from_bot = exec_bot)
                     for kb in keyboards:
@@ -35,7 +69,7 @@ class Get_content(View):
                         btns = {}
                         for btn in buttons:
                             btns.update({btn.caption:[btn.text, btn.order]})
-                        cont.update({kb.caption:btns})
+                        cont.update({kb.name:btns})
             
             data.update({'status':'OK'})
             try:
