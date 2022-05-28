@@ -1,4 +1,3 @@
-from tabnanny import verbose
 from django.db import models
 from core.models import TgBot
 from Users_assets.models import UserTag
@@ -61,6 +60,25 @@ class Condition(models.Model):
     
     def __str__(self):
         return self.name
+
+class TypeBlock(models.Model):
+    block_id = models.CharField(verbose_name = 'ID', max_length = 10, unique = True)
+    from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
+    from_button = models.ForeignKey(keyboard_button, verbose_name = 'По кнопке', on_delete = models.SET_NULL, blank = True, null = True)
+    language = models.CharField(verbose_name = 'Язык перевода', max_length = 5, choices = LANG_CHOICES, default = 'RUS')
+    text = models.TextField(verbose_name = 'Текст реакции', blank = True, null = True)
+    keyboard = models.ForeignKey(keyboard, verbose_name = 'Клавиатура', on_delete = models.SET_NULL, blank = True, null = True, default = None)
+    input_state = models.BooleanField(verbose_name = 'Ожидание ввода?', default = False)
+    next_block = models.ForeignKey('self', verbose_name = 'Следующий блок', null = True, blank = True, on_delete = models.SET_NULL)
+    delay = models.IntegerField(verbose_name = 'Задержка перед реакцией (секунды)', default = 0)
+    conditions = models.ManyToManyField(Condition, verbose_name = 'Условия', blank = True)
+
+    class Meta:
+        verbose_name = 'Типовой блок'
+        verbose_name_plural = 'Типовые блоки (сообщения от бота)'
+    
+    def __str__(self):
+        return self.block_id
     
 class Command(models.Model):
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
@@ -70,7 +88,7 @@ class Command(models.Model):
     text = models.TextField(verbose_name = 'Текст реакции', blank = True, null = True)
     keyboard = models.ForeignKey(keyboard, verbose_name = 'Клавиатура', on_delete = models.SET_NULL, blank = True, null = True, default = None)
     input_state = models.BooleanField(verbose_name = 'Ожидание ввода?', default = False)
-    next_block = models.CharField(verbose_name = 'Следующий блок', max_length = 50, default = '-', null = True, blank = True)
+    next_block = models.ForeignKey(TypeBlock, verbose_name = 'Следующий блок', null = True, blank = True, on_delete = models.SET_NULL)
     delay = models.IntegerField(verbose_name = 'Задержка перед реакцией (секунды)', default = 0)
     conditions = models.ManyToManyField(Condition, verbose_name = 'Условия', blank = True)
 

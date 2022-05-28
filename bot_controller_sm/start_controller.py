@@ -16,6 +16,7 @@ async def start_bots(bots_names: list, auth_token):
         # запуск бота
         bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token, auth_token, bot_name])
         RUNNING_BOTS.update({bot_name:bot_process})
+        
         await asyncio.sleep(2)
         print(f'{bot_name} started')
 
@@ -31,13 +32,16 @@ async def stop_bots(bots_names: list):
 async def main(auth_token):
     bots_names = []
     while True:
-        bots_info = await api_connector.AsyncGetBotInfo('all', auth_token)
-        active_bots_names = []
-        changes = {'added':'', 'removed':''}
-        for k in bots_info.keys():
-            if k != 'status':
-                if bots_info[k]['active'] == True: 
-                    active_bots_names.append(k)
+        try:
+            bots_info = await api_connector.AsyncGetBotInfo('all', auth_token)
+            active_bots_names = []
+            changes = {'added':'', 'removed':''}
+            for k in bots_info.keys():
+                if k != 'status':
+                    if bots_info[k]['active'] == True: 
+                        active_bots_names.append(k)
+        except:
+            active_bots_names = []
         if active_bots_names != bots_names:
             if len(bots_names) < len(active_bots_names): changes.update({'added':list(set(active_bots_names) - set(bots_names))})
             else: changes.update({'removed':list(set(bots_names) - set(active_bots_names))})

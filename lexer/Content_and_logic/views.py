@@ -1,13 +1,23 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import View
-from .models import keyboard, keyboard_button, Command, FirstTouch
+from .models import keyboard, keyboard_button, Command, FirstTouch, TypeBlock
 from core.models import TgBot
 from core.views import auth_check
 
 from rest_framework import authentication
 
 import json
+
+# class Bot:
+#     def __fillActions(self, action_name):
+#         Action()
+#         return Action
+    
+#     def execute(self, header, *args):
+#         result = self.__fillActions(header).execute(*args)
+#         return JsonResp(result)
+        
 
 class Get_content(View):
     def get(self, request):
@@ -17,17 +27,45 @@ class Get_content(View):
         
         header = request.GET.get('head')
         bot_name = request.GET.get('botname')
+        lang = request.GET.get('lang')
         exec_bot = TgBot.objects.get(caption = bot_name)
         
         try:
             cont = {}
+            
             match header:
+                case 'blocks':
+                    blocks_set = TypeBlock.objects.filter(from_bot = exec_bot).filter(language = lang)
+                    ccc = blocks_set.count()
+                    for block in blocks_set:
+                        fields_info = {}
+                        fields = TypeBlock._meta.get_fields()
+                        for field in fields:
+                            try: ser_data = str(json.dumps(getattr(block, field.name), separators=(',', ':'), ensure_ascii = False, default = str)).replace('"','')
+                            except: ser_data = ''    
+                            fields_info.update({field.name:ser_data})
+                        info = {}
+                        for item_cond in block.conditions.all():
+                            try: 
+                                tag = item_cond.usr_tag
+                                t_id = tag.tag_id
+                            except: t_id = "None"
+                            info.update({item_cond.name:{
+                                'var_key':item_cond.var_key,
+                                'qual':item_cond.qual,
+                                'var_value':item_cond.var_value,
+                                'usr_tag':t_id,
+                                'failed_text':item_cond.failed_text
+                            }})
+                        fields_info.update({'conditions':info})
+                        cont.update({block.block_id:fields_info})
+                    
                 case 'buttons': 
                     items = keyboard_button.objects.filter(from_bot = exec_bot)
                     fields_info = keyboard_button._meta.get_fields()
                 case 'commands': 
                     items = Command.objects.filter(from_bot = exec_bot)
-                    fts = FirstTouch.objects.filter(from_bot = exec_bot)
+                    fts = FirstTouch.objects.filter(from_bot = exec_bot).filter(language = lang)
                     fields_info = Command._meta.get_fields()
                     conditions = {}
                     for item in items:
@@ -45,25 +83,21 @@ class Get_content(View):
                                 'failed_text':item_cond.failed_text
                             }})
                         conditions.update({item.caption:info})
-                    first_touch = {}
                     for ft in fts:
                         try: kb_name = ft.keyboard.name
                         except: kb_name = 'None'
-                        info = {
+                        first_touch = {
                             'text':ft.text,
                             'keyboard':kb_name,
                             'input_state':ft.input_state,
                             'next_block':ft.next_block
                         }
-                        first_touch.update({
-                            ft.language:info
-                        })
                     data.update({
                         'conditions':conditions,
                         'first_touch':first_touch
                     })
                 case 'keyboard':
-                    keyboards = keyboard.objects.filter(from_bot = exec_bot)
+                    keyboards = keyboard.objects.filter(from_bot = exec_bot).filter(language = lang)
                     for kb in keyboards:
                         buttons = kb.buttons.all()
                         btns = {}

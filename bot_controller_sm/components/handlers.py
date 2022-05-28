@@ -1,6 +1,7 @@
 from aiogram import Dispatcher, types
 from api_connector import GetContent, AsyncGetContent, AsyncAddUser, AsyncGetUserInfo
 from keyboard_creator import create_keyboard
+from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
 
 AT = None
@@ -26,7 +27,7 @@ async def content_block(message : types.Message, *args):
     if args[0] == 1:
         resp_api = await AsyncGetContent(BN, AT, ['block', NB])
         await message.answer(str(resp_api))
-        
+
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
     global AT, BN, NB
@@ -39,17 +40,20 @@ async def command_react(message : types.Message):
     else: kb = await create_keyboard(BN, AT, commands_info['commands'][cmd]['keyboard'], message.from_user.id)
     if cmd == 'start':
         if resp_api_usr['status'] != 'OK':
-            if len(message.text) > 6:
-                USER_TAG = message.text.split()[1]
-                data = {
-                    "usr_id": message.from_user.id,
-                    "teleg": message.from_user.username,
-                    "usr_name": f'{message.from_user.first_name} {message.from_user.last_name}',
-                    "usr_tag": USER_TAG
-                }
-                resp = await AsyncAddUser(BN, AT, data)
-                
+            USER_TAG = ''
+            if len(message.text) > 6: USER_TAG = message.text.split()[1]
+            data = {
+                "usr_id": message.from_user.id,
+                "teleg": message.from_user.username,
+                "usr_name": f'{message.from_user.first_name} {message.from_user.last_name}',
+                "usr_tag": USER_TAG
+            }
+            resp = await AsyncAddUser(BN, AT, data)
+            
             # !!!Сюда надо добавить ответ при первом касании из админки (в админку добавить поле для ответа на первое касание)!!!
+            text = commands_info['first_touch']['text']
+            if commands_info['first_touch']['keyboard'] == 'null': kb = ReplyKeyboardRemove()
+            else: kb = await create_keyboard(BN, AT, commands_info['first_touch']['keyboard'], message.from_user.id)
             await message.answer(text, reply_markup = kb)
     
     resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
@@ -100,6 +104,7 @@ def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     AT = auth_token
     BN = bot_name
     commands_list = MakeCommandList(auth_token, bot_name)
+    button_list = MakeButtonsList(auth_token, bot_name)
     
     dp.register_message_handler(command_react, commands = commands_list)
-    # dp.register_message_handler(content_block, )
+    dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")

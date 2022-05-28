@@ -9,6 +9,7 @@ def GetContent(bot_name, auth_token, target):
     data = {
         'botname':bot_name,
         'head':target,
+        'lang':'RUS',
         'block':''
     }
     resp_api = requests.get(SERVER_URL, params = data, headers = head)
@@ -22,11 +23,13 @@ async def AsyncGetContent(bot_name, auth_token, target):
         data = {
             'botname':bot_name,
             'head':target,
+            'lang':'RUS',
             'block':''
         }
     elif type(target) == list:
         data = {
             'botname':bot_name,
+            'lang':'RUS',
             'head':target[0],
             'block':target[1]
         }
