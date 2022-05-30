@@ -19,14 +19,14 @@ async def AsyncGetContent(bot_name, auth_token, target):
     head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}
     PATH = '/content/'
     SERVER_URL = 'https://' + SERVER_HOST + PATH
-    if type(target) == str:
+    if isinstance(target, str):
         data = {
             'botname':bot_name,
             'head':target,
             'lang':'RUS',
             'block':''
         }
-    elif type(target) == list:
+    elif isinstance(target, list):
         data = {
             'botname':bot_name,
             'lang':'RUS',

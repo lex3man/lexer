@@ -96,7 +96,7 @@ async def command_react(message : types.Message):
                     else: NB = None
                 else: await message.answer(commands_info['conditions'][cmd][k]['failed_text'], reply_markup = ReplyKeyboardRemove())
         
-        if NB != None:
+        if NB is not None:
             await content_block(message, 1)
 
 def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
