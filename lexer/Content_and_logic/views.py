@@ -35,8 +35,8 @@ class Get_content(View):
             
             match header:
                 case 'blocks':
-                    blocks_set = TypeBlock.objects.filter(from_bot = exec_bot).filter(language = lang)
-                    ccc = blocks_set.count()
+                    get_block = request.GET.get('block')
+                    blocks_set = TypeBlock.objects.filter(from_bot = exec_bot).filter(language = lang).filter(block_id = get_block)
                     for block in blocks_set:
                         fields_info = {}
                         fields = TypeBlock._meta.get_fields()

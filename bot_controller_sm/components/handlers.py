@@ -3,6 +3,7 @@ from api_connector import GetContent, AsyncGetContent, AsyncAddUser, AsyncGetUse
 from keyboard_creator import create_keyboard
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
+from time import sleep
 
 AT = None
 BN = None
@@ -24,15 +25,22 @@ def MakeCommandList(auth_token, bot_name):
 
 # Обработчик БЛОКА СООБЩЕНИЙ бота
 async def content_block(message : types.Message, *args):
+    global AT, BN, NB
     if args[0] == 1:
-        resp_api = await AsyncGetContent(BN, AT, ['block', NB])
-        await message.answer(str(resp_api))
+        resp_api = await AsyncGetContent(BN, AT, ['blocks', NB])
+        text = resp_api['blocks'][NB]['text']
+        delay = int(resp_api['blocks'][NB]['delay'])
+        kb_name = resp_api['blocks'][NB]['keyboard']
+        kb = ReplyKeyboardRemove()
+        if kb_name != 'null': kb = await create_keyboard(BN, AT, kb_name, message.from_user.id)
+        sleep(delay)
+        await message.answer(text, reply_markup = kb)
 
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
     global AT, BN, NB
     cmd = message.text.replace('/','').split(' ')[0]
-    commands_info = GetContent(BN, AT, 'commands')
+    commands_info = await AsyncGetContent(BN, AT, 'commands')
     text = commands_info['commands'][cmd]['text']
     kb = ReplyKeyboardRemove()
     resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')

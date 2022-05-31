@@ -1,4 +1,4 @@
-import aiohttp, requests
+import aiohttp, requests, json
 
 SERVER_HOST = 'dev.insiderlab.ru'
 
@@ -35,7 +35,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
         }
     async with aiohttp.ClientSession(headers = head) as session:
         async with session.get(SERVER_URL, params = data) as resp:
-            response = resp.json()
+            response = await resp.json()
             return response
 
 def GetBotInfo(bot_name : str, auth_token):
