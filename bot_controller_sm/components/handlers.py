@@ -27,14 +27,29 @@ def MakeCommandList(auth_token, bot_name):
 async def content_block(message : types.Message, *args):
     global AT, BN, NB
     if args[0] == 1:
-        resp_api = await AsyncGetContent(BN, AT, ['blocks', NB])
-        text = resp_api['blocks'][NB]['text']
-        delay = int(resp_api['blocks'][NB]['delay'])
-        kb_name = resp_api['blocks'][NB]['keyboard']
+        resp_api_blck = await AsyncGetContent(BN, AT, ['blocks', NB])
+        resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
+        resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
+        tags_list = resp_api_usr[message.from_user.id]['tags']
+        text = resp_api_blck['blocks'][NB]['text']
+        delay = int(resp_api_blck['blocks'][NB]['delay'])
+        kb_name = resp_api_blck['blocks'][NB]['keyboard']
         kb = ReplyKeyboardRemove()
         if kb_name != 'null': kb = await create_keyboard(BN, AT, kb_name, message.from_user.id)
-        sleep(delay)
-        await message.answer(text, reply_markup = kb)
+
+        conditions_info = resp_api_blck['blocks'][NB]['conditions']
+        if conditions_info == {}:
+            sleep(delay)
+            await message.answer(text, reply_markup = kb)
+            NB = None
+            if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
+        else:
+            for condition_key in conditions_info.keys():
+                if conditions_info[condition_key]['usr_tag'] != 'None':
+                    if conditions_info[condition_key]['usr_tag'] in tags_list:
+                        await message.answer(text, reply_markup = kb)
+                        NB = None
+                        if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
 
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
@@ -68,7 +83,6 @@ async def command_react(message : types.Message):
     if resp_api_usr['status'] == 'OK':
         usr_info = resp_api_usr[str(message.from_user.id)]
         tags_list = usr_info['tags']
-        vars_dict = resp_api_vrs['vars']
         
         # Проверка условий выполнения команды
         conditions_info = commands_info['conditions'][cmd]
@@ -116,3 +130,4 @@ def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     
     dp.register_message_handler(command_react, commands = commands_list)
     dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")
+from aiogram import Dispatcher, types

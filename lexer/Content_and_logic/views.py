@@ -4,6 +4,7 @@ from django.views import View
 from .models import keyboard, keyboard_button, Command, FirstTouch, TypeBlock
 from core.models import TgBot
 from core.views import auth_check
+from core.bot_handler.bot_model import BotHandler
 
 from rest_framework import authentication
 
@@ -17,6 +18,21 @@ import json
 #     def execute(self, header, *args):
 #         result = self.__fillActions(header).execute(*args)
 #         return JsonResp(result)
+
+class BotTest(View):
+    def get(self, request):
+        data = {'status':'error'}
+        auth_header = auth_check(authentication.get_authorization_header(request).split())
+        if auth_header == False: return JsonResponse(data)
+        
+        bot_name = request.GET.get('botname')
+        from_bot = TgBot.objects.get(caption = bot_name)
+        
+        try:
+            exec_bot = BotHandler(bot_name, from_bot.token)
+            data.update({'status':'OK', 'session':exec_bot.session})
+        except: pass
+        return JsonResponse(data)
         
 
 class Get_content(View):
