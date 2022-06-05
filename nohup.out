@@ -1,0 +1,6 @@
+Traceback (most recent call last):
+  File "/var/www/dev.insiderlab.ru/bot_controller_sm/start_controller.py", line 1, in <module>
+    from components import api_connector
+  File "/var/www/dev.insiderlab.ru/bot_controller_sm/components/api_connector.py", line 1, in <module>
+    import aiohttp, requests, json
+ModuleNotFoundError: No module named 'aiohttp'

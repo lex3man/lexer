@@ -30,7 +30,7 @@ async def content_block(message : types.Message, *args):
         resp_api_blck = await AsyncGetContent(BN, AT, ['blocks', NB])
         resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
         resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
-        tags_list = resp_api_usr[message.from_user.id]['tags']
+        tags_list = resp_api_usr[str(message.from_user.id)]['tags']
         text = resp_api_blck['blocks'][NB]['text']
         delay = int(resp_api_blck['blocks'][NB]['delay'])
         kb_name = resp_api_blck['blocks'][NB]['keyboard']
@@ -99,7 +99,7 @@ async def command_react(message : types.Message):
             else:
                 condition_match = False
                 quality = commands_info['conditions'][cmd][k]['qual']
-                var_usr = vars_dict[commands_info['conditions'][cmd][k]['var_key']]
+                var_usr = resp_api_vrs[commands_info['conditions'][cmd][k]['var_key']]
                 value_cond = commands_info['conditions'][cmd][k]['var_value']
                 match quality:
                     case '=': 

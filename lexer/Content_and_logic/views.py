@@ -33,7 +33,6 @@ class BotTest(View):
             data.update({'status':'OK', 'session':exec_bot.session})
         except: pass
         return JsonResponse(data)
-        
 
 class Get_content(View):
     def get(self, request):

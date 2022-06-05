@@ -49,6 +49,8 @@ ALLOWED_HOSTS = ['dev.insiderlab.ru']
 # Application definition
 
 INSTALLED_APPS = [
+    # custom
+    
     # build-in
     'django.contrib.admin',
     'django.contrib.auth',
@@ -82,7 +84,7 @@ ROOT_URLCONF = 'lexer.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['lexer/templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -151,7 +153,6 @@ TIME_ZONE = 'Europe/Moscow'
 USE_I18N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/

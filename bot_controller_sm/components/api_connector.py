@@ -76,6 +76,7 @@ async def AsyncGetUserInfo(bot_name, auth_token, user_id, target):
     SERVER_URL = 'https://' + SERVER_HOST + PATH
     head = {'Authorization': 'Bearer ' + auth_token}
     data = {
+        'bot_name':bot_name,
         'head':target,
         'user_id':user_id
     }

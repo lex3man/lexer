@@ -1,5 +1,5 @@
 from sys import argv
-from aiogram import Bot, types, executor, md
+from aiogram import Bot, executor
 from aiogram.dispatcher import Dispatcher
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.contrib.middlewares.logging import LoggingMiddleware
