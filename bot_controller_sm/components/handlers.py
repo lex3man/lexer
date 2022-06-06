@@ -5,9 +5,9 @@ from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
 from time import sleep
 
-AT = None
-BN = None
-NB = None
+AT = None # Auth API-token
+BN = None # Bot name
+NB = None # Next block ID
 
 def MakeButtonsList(auth_token, bot_name):
     buttons_info = GetContent(bot_name, auth_token, 'buttons')['buttons']
@@ -23,6 +23,50 @@ def MakeCommandList(auth_token, bot_name):
         commands_list.append(k)
     return commands_list
 
+async def ConditionsMatch(conditions_info, user_info, user_vars):
+    user_tags_list = user_info['tags']
+    user_vars_dict = user_vars['vars']
+    response = {
+        'condition':'all',
+        'qual':'dismatch'
+    }
+    if conditions_info != {}:
+        
+        for condition_key in conditions_info.keys():
+            if conditions_info[condition_key]['usr_tag'] != 'None':
+                response.update({'condition':'tag', 'qual':'dismatch'})
+                if conditions_info[condition_key]['usr_tag'] in user_tags_list: 
+                    response.update({'qual':'match', 'condition_key':condition_key})
+                    return response
+            else:
+                response.update({'condition':'var', 'qual':'dismatch'})
+                quality = conditions_info[condition_key]['qual']
+                var_usr = conditions_info[condition_key]['var_key']
+                var_cond = conditions_info[condition_key]['var_value']
+                match quality:
+                    case '=': 
+                        if user_vars_dict[var_usr] == var_cond: 
+                            response.update({'qual':'match'})
+                            return response
+                    case '>=':
+                        if user_vars_dict[var_usr] >= var_cond: 
+                            response.update({'qual':'match'})
+                            return response
+                    case '>':
+                        if user_vars_dict[var_usr] > var_cond: 
+                            response.update({'qual':'match'})
+                            return response
+                    case '<=':
+                        if user_vars_dict[var_usr] <= var_cond: 
+                            response.update({'qual':'match'})
+                            return response
+                    case '<':
+                        if user_vars_dict[var_usr] < var_cond: 
+                            response.update({'qual':'match'})
+                            return response
+    return response
+
+
 # Обработчик БЛОКА СООБЩЕНИЙ бота
 async def content_block(message : types.Message, *args):
     global AT, BN, NB
@@ -30,7 +74,6 @@ async def content_block(message : types.Message, *args):
         resp_api_blck = await AsyncGetContent(BN, AT, ['blocks', NB])
         resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
         resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
-        tags_list = resp_api_usr[str(message.from_user.id)]['tags']
         text = resp_api_blck['blocks'][NB]['text']
         delay = int(resp_api_blck['blocks'][NB]['delay'])
         kb_name = resp_api_blck['blocks'][NB]['keyboard']
@@ -44,12 +87,11 @@ async def content_block(message : types.Message, *args):
             NB = None
             if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
         else:
-            for condition_key in conditions_info.keys():
-                if conditions_info[condition_key]['usr_tag'] != 'None':
-                    if conditions_info[condition_key]['usr_tag'] in tags_list:
-                        await message.answer(text, reply_markup = kb)
-                        NB = None
-                        if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
+            condition_match = ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
+            if condition_match['qual'] == 'match':
+                await message.answer(text, reply_markup = kb)
+                NB = None
+                if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
 
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
@@ -82,41 +124,19 @@ async def command_react(message : types.Message):
     resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
     if resp_api_usr['status'] == 'OK':
         usr_info = resp_api_usr[str(message.from_user.id)]
-        tags_list = usr_info['tags']
         
         # Проверка условий выполнения команды
         conditions_info = commands_info['conditions'][cmd]
         if conditions_info == {}:
             await message.answer(text, reply_markup = kb)
+            NB = None
             if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
-            else: NB = None
-        for k in conditions_info.keys():
-            if conditions_info[k]['usr_tag'] != 'None':
-                if conditions_info[k]['usr_tag'] in tags_list:
-                    await message.answer(text, reply_markup = kb)
-                    if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
-                else: await message.answer(commands_info['conditions'][cmd][k]['failed_text'], reply_markup = ReplyKeyboardRemove())
-            else:
-                condition_match = False
-                quality = commands_info['conditions'][cmd][k]['qual']
-                var_usr = resp_api_vrs[commands_info['conditions'][cmd][k]['var_key']]
-                value_cond = commands_info['conditions'][cmd][k]['var_value']
-                match quality:
-                    case '=': 
-                        if var_usr == value_cond: condition_match = True
-                    case '>=':
-                        if int(var_usr) >= int(value_cond): condition_match = True
-                    case '>':
-                        if int(var_usr) > int(value_cond): condition_match = True
-                    case '<=':
-                        if int(var_usr) <= int(value_cond): condition_match = True
-                    case '<':
-                        if int(var_usr) < int(value_cond): condition_match = True
-                if condition_match:
-                    await message.answer(text, reply_markup = kb)
-                    if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
-                    else: NB = None
-                else: await message.answer(commands_info['conditions'][cmd][k]['failed_text'], reply_markup = ReplyKeyboardRemove())
+        else:
+            condition_match = ConditionsMatch(conditions_info, usr_info, resp_api_vrs)
+            if condition_match['qual'] == 'match':
+                await message.answer(text, reply_markup = kb)
+                NB = None
+                if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
         
         if NB is not None:
             await content_block(message, 1)

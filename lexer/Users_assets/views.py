@@ -124,6 +124,7 @@ class CreateUser(View):
                     for var in usr_vars:
                         vars_info.update({var.key:var.value})
                     data.update({
+                        'status':'OK',
                         'msg':'Done',
                         'vars':vars_info
                     })
