@@ -45,23 +45,23 @@ async def ConditionsMatch(conditions_info, user_info, user_vars):
                 var_cond = conditions_info[condition_key]['var_value']
                 match quality:
                     case '=': 
-                        if user_vars_dict[var_usr] == var_cond: 
+                        if user_vars_dict[var_usr] == var_cond:
                             response.update({'qual':'match'})
                             return response
                     case '>=':
-                        if user_vars_dict[var_usr] >= var_cond: 
+                        if int(user_vars_dict[var_usr]) >= int(var_cond):
                             response.update({'qual':'match'})
                             return response
                     case '>':
-                        if user_vars_dict[var_usr] > var_cond: 
+                        if int(user_vars_dict[var_usr]) > int(var_cond):
                             response.update({'qual':'match'})
                             return response
                     case '<=':
-                        if user_vars_dict[var_usr] <= var_cond: 
+                        if int(user_vars_dict[var_usr]) <= int(var_cond):
                             response.update({'qual':'match'})
                             return response
                     case '<':
-                        if user_vars_dict[var_usr] < var_cond: 
+                        if int(user_vars_dict[var_usr]) < int(var_cond):
                             response.update({'qual':'match'})
                             return response
     return response
@@ -87,8 +87,9 @@ async def content_block(message : types.Message, *args):
             NB = None
             if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
         else:
-            condition_match = ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
+            condition_match = await ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
             if condition_match['qual'] == 'match':
+                sleep(delay)
                 await message.answer(text, reply_markup = kb)
                 NB = None
                 if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
@@ -132,7 +133,7 @@ async def command_react(message : types.Message):
             NB = None
             if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
         else:
-            condition_match = ConditionsMatch(conditions_info, usr_info, resp_api_vrs)
+            condition_match = await ConditionsMatch(conditions_info, usr_info, resp_api_vrs)
             if condition_match['qual'] == 'match':
                 await message.answer(text, reply_markup = kb)
                 NB = None
