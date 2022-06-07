@@ -32,6 +32,30 @@ class CreateUser(View):
         json_body = json.loads(request.body)
         head = json_body.get('head')
         
+        if head == 'set_var':
+            data.update({"msg":"can't add var"})
+            get_bot_name = json_body.get('bot_name')
+            get_usr_id = json_body.get('usr_id')
+            get_var_name = json_body.get('var_name')
+            get_var_value = json_body.get('var_value')
+            get_user = User.objects.get(tg_ID = get_usr_id)
+            try:
+                set_var = Var.objects.filter(user = get_user).get(key = get_var_name)
+                set_var.value = get_var_value
+            except:
+                try:
+                    set_var = Var(
+                        user = get_user,
+                        key = get_var_name,
+                        value = get_var_value
+                    )
+                except: pass
+            set_var.save()
+            data.update({
+                'status':'OK',
+                'msg':'added new var',
+            })
+        
         if head == 'new_user_start':
             get_bot_name = json_body.get('bot_name')
             get_usr_id = json_body.get('usr_id')

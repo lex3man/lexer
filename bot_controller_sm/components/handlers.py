@@ -1,5 +1,5 @@
 from aiogram import Dispatcher, types
-from api_connector import GetContent, AsyncGetContent, AsyncAddUser, AsyncGetUserInfo
+from api_connector import AsyncSetVar, GetContent, AsyncGetContent, AsyncAddUser, AsyncGetUserInfo
 from keyboard_creator import create_keyboard
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
@@ -8,6 +8,9 @@ from time import sleep
 AT = None # Auth API-token
 BN = None # Bot name
 NB = None # Next block ID
+InputMode = False
+AutoCall = False
+save_to = None
 
 def MakeButtonsList(auth_token, bot_name):
     buttons_info = GetContent(bot_name, auth_token, 'buttons')['buttons']
@@ -66,37 +69,71 @@ async def ConditionsMatch(conditions_info, user_info, user_vars):
                             return response
     return response
 
-
 # Обработчик БЛОКА СООБЩЕНИЙ бота
-async def content_block(message : types.Message, *args):
-    global AT, BN, NB
-    if args[0] == 1:
+async def content_block(message : types.Message):
+    global AT, BN, NB, InputMode, save_to, AutoCall
+    resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
+    resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
+    if AutoCall:
+        if InputMode:
+            InputMode = False
+            var_data = {
+                'usr_id':message.from_user.id,
+                'var_name':save_to,
+                'var_value':message.text
+            }
+            resp = await AsyncSetVar(BN, AT, var_data)
+            save_to = None
+            await content_block(message)
+            return True
         resp_api_blck = await AsyncGetContent(BN, AT, ['blocks', NB])
-        resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
-        resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
-        text = resp_api_blck['blocks'][NB]['text']
-        delay = int(resp_api_blck['blocks'][NB]['delay'])
-        kb_name = resp_api_blck['blocks'][NB]['keyboard']
-        kb = ReplyKeyboardRemove()
-        if kb_name != 'null': kb = await create_keyboard(BN, AT, kb_name, message.from_user.id)
+        block_data = resp_api_blck['blocks'][NB]
+        AutoCall = False
+    else:
+        resp_api_blck = await AsyncGetContent(BN, AT, ['answer', message.text])
+        try:
+            block_keys = []
+            for bk in resp_api_blck['answer'].keys(): block_keys.append(bk)
+            block_key = block_keys[0]
+            block_data = resp_api_blck['answer'][block_key]
+        except:
+            await message.answer('error')
+            return True
 
-        conditions_info = resp_api_blck['blocks'][NB]['conditions']
-        if conditions_info == {}:
+    # Формирование ответа
+    text = block_data['text']
+    delay = int(block_data['delay'])
+    kb_name = block_data['keyboard']
+    get_input = block_data['input_state']
+    save_to = block_data['save_to_var']
+
+    kb = ReplyKeyboardRemove()
+    if kb_name != 'null': kb = await create_keyboard(BN, AT, kb_name, message.from_user.id)
+
+    conditions_info = block_data['conditions']
+    if conditions_info == {}:
+        sleep(delay)
+        await message.answer(text, reply_markup = kb)
+        NB = None
+        if kb_name == 'null': 
+            AutoCall = True
+            NB = block_data['next_block']
+        if get_input == 'true': InputMode = True
+    else:
+        condition_match = await ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
+        if condition_match['qual'] == 'match':
             sleep(delay)
             await message.answer(text, reply_markup = kb)
             NB = None
-            if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
-        else:
-            condition_match = await ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
-            if condition_match['qual'] == 'match':
-                sleep(delay)
-                await message.answer(text, reply_markup = kb)
-                NB = None
-                if kb_name == 'null': NB = resp_api_blck['blocks'][NB]['next_block']
+            if kb_name == 'null': 
+                AutoCall = True
+                NB = block_data['next_block']
+            if get_input == 'true': InputMode = True
+        else: pass
 
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
-    global AT, BN, NB
+    global AT, BN, NB, AutoCall
     cmd = message.text.replace('/','').split(' ')[0]
     commands_info = await AsyncGetContent(BN, AT, 'commands')
     text = commands_info['commands'][cmd]['text']
@@ -140,7 +177,8 @@ async def command_react(message : types.Message):
                 if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
         
         if NB is not None:
-            await content_block(message, 1)
+            AutoCall = True
+            await content_block(message)
 
 def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     global AT, BN
@@ -150,5 +188,6 @@ def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     button_list = MakeButtonsList(auth_token, bot_name)
     
     dp.register_message_handler(command_react, commands = commands_list)
-    dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")
-from aiogram import Dispatcher, types
+    # dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")
+    dp.register_message_handler(content_block, state = "*")
+    
