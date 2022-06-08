@@ -49,27 +49,28 @@ async def ConditionsMatch(conditions_info, user_info, user_vars):
         if conditions_info[condition_key]['usr_tag'] != 'None':
             match_result = True
             if conditions_info[condition_key]['usr_tag'] not in user_tags_list: return False
-        quality = conditions_info[condition_key]['qual']
-        var_usr = conditions_info[condition_key]['var_key']
-        var_cond = conditions_info[condition_key]['var_value']
-        try:
-            match quality:
-                case '=':
-                    if user_vars_dict[var_usr] == var_cond: match_result = True
-                    else: return False
-                case '>=':
-                    if float(user_vars_dict[var_usr]) >= float(var_cond): match_result = True
-                    else: return False
-                case '>':
-                    if float(user_vars_dict[var_usr]) > float(var_cond): match_result = True
-                    else: return False
-                case '<=':
-                    if float(user_vars_dict[var_usr]) <= float(var_cond): match_result = True
-                    else: return False
-                case '<':
-                    if float(user_vars_dict[var_usr]) < float(var_cond): match_result = True
-                    else: return False
-        except: return False
+        else:
+            quality = conditions_info[condition_key]['qual']
+            var_usr = conditions_info[condition_key]['var_key']
+            var_cond = conditions_info[condition_key]['var_value']
+            try:
+                match quality:
+                    case '=':
+                        if user_vars_dict[var_usr] == var_cond: match_result = True
+                        else: return False
+                    case '>=':
+                        if float(user_vars_dict[var_usr]) >= float(var_cond): match_result = True
+                        else: return False
+                    case '>':
+                        if float(user_vars_dict[var_usr]) > float(var_cond): match_result = True
+                        else: return False
+                    case '<=':
+                        if float(user_vars_dict[var_usr]) <= float(var_cond): match_result = True
+                        else: return False
+                    case '<':
+                        if float(user_vars_dict[var_usr]) < float(var_cond): match_result = True
+                        else: return False
+            except: return False
     return match_result
 
 async def UnknownBlock(message : types.Message):
