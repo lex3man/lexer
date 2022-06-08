@@ -24,7 +24,6 @@ class TBAdmin(admin.ModelAdmin):
     list_display = ('block_id', 'text', 'language', 'keyboard', 'from_bot')
     search_fields = ('block_id', 'from_button', 'text')
     list_filter = ('from_button', 'language', 'from_bot')
-    # list_select_related = ('from_button', 'from_bot')
 
 admin.site.register(keyboard_button, KeyboardButtonsAdmin)
 admin.site.register(keyboard, KeyboardAdmin)

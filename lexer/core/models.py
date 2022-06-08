@@ -29,13 +29,17 @@ class TgBot(models.Model):
     def start(self, request, queryset):
         queryset.update(active = True)
         for b in queryset:
-            requests.post('http://127.0.0.1:5000', json = {'bot_name':b.caption, 'action':'add'})
+            try: requests.post('http://127.0.0.1:5000', json = {'bot_name':b.caption, 'action':'add'})
+            except: 
+                b.active = False
+                b.save()
 
     @admin.action(description = 'Остановить выбранных ботов')
     def stop(self, request, queryset):
         queryset.update(active = False)
         for b in queryset:
-            requests.post('http://127.0.0.1:5000', json = {'bot_name':b.caption, 'action':'remove'})
+            try: requests.post('http://127.0.0.1:5000', json = {'bot_name':b.caption, 'action':'remove'})
+            except: pass
 
     @admin.display
     def add_action(self):

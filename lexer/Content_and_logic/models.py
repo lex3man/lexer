@@ -62,14 +62,15 @@ class Condition(models.Model):
         return self.name
 
 class TypeBlock(models.Model):
-    block_id = models.CharField(verbose_name = 'ID', max_length = 10, unique = True)
+    block_id = models.CharField(verbose_name = 'ID', max_length = 50, unique = True)
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
-    from_button = models.ForeignKey(keyboard_button, verbose_name = 'По кнопке', on_delete = models.SET_NULL, blank = True, null = True)
+    from_button = models.ManyToManyField(keyboard_button, verbose_name = 'По кнопке', blank = True)
     language = models.CharField(verbose_name = 'Язык перевода', max_length = 5, choices = LANG_CHOICES, default = 'RUS')
     text = models.TextField(verbose_name = 'Текст реакции', blank = True, null = True)
     keyboard = models.ForeignKey(keyboard, verbose_name = 'Клавиатура', on_delete = models.SET_NULL, blank = True, null = True, default = None)
     input_state = models.BooleanField(verbose_name = 'Ожидание ввода?', default = False)
     save_to_var = models.CharField(verbose_name = 'Имя переменной для сохранения ввода', max_length = 50, blank = True, null = True, default = None)
+    value_to_save = models.CharField(verbose_name = 'Значение переменной (если ввод не ожидается)', max_length = 150, blank = True, null = True, default = None)
     next_block = models.ForeignKey('self', verbose_name = 'Следующий блок', null = True, blank = True, on_delete = models.SET_NULL)
     delay = models.IntegerField(verbose_name = 'Задержка перед реакцией (секунды)', default = 0)
     conditions = models.ManyToManyField(Condition, verbose_name = 'Условия', blank = True)
@@ -80,7 +81,7 @@ class TypeBlock(models.Model):
     
     def __str__(self):
         return self.block_id
-    
+
 class Command(models.Model):
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
     command_id = models.CharField(verbose_name = 'ID', max_length = 10, unique = True)

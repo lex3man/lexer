@@ -26,6 +26,21 @@ def MakeCommandList(auth_token, bot_name):
         commands_list.append(k)
     return commands_list
 
+async def VarsReplace(raw_text, user_vars):
+    get_text = raw_text.split('#{')
+    get_vars = []
+    for i in range(len(get_text)):
+        x = len(get_text) - 1 - i
+        var_name = get_text[x].split('}')[0]
+        get_vars.append(var_name)
+    for v in get_vars:
+        try: user_var = user_vars[v]
+        except: user_var = 'None'
+        replacement = '#{' + v + '}'
+        raw_text = raw_text.replace(replacement, user_var)
+    text_out = raw_text
+    return text_out
+
 async def ConditionsMatch(conditions_info, user_info, user_vars):
     user_tags_list = user_info['tags']
     user_vars_dict = user_vars['vars']
@@ -46,27 +61,29 @@ async def ConditionsMatch(conditions_info, user_info, user_vars):
                 quality = conditions_info[condition_key]['qual']
                 var_usr = conditions_info[condition_key]['var_key']
                 var_cond = conditions_info[condition_key]['var_value']
-                match quality:
-                    case '=': 
-                        if user_vars_dict[var_usr] == var_cond:
-                            response.update({'qual':'match'})
-                            return response
-                    case '>=':
-                        if int(user_vars_dict[var_usr]) >= int(var_cond):
-                            response.update({'qual':'match'})
-                            return response
-                    case '>':
-                        if int(user_vars_dict[var_usr]) > int(var_cond):
-                            response.update({'qual':'match'})
-                            return response
-                    case '<=':
-                        if int(user_vars_dict[var_usr]) <= int(var_cond):
-                            response.update({'qual':'match'})
-                            return response
-                    case '<':
-                        if int(user_vars_dict[var_usr]) < int(var_cond):
-                            response.update({'qual':'match'})
-                            return response
+                try:
+                    match quality:
+                        case '=': 
+                            if user_vars_dict[var_usr] == var_cond:
+                                response.update({'qual':'match'})
+                                return response
+                        case '>=':
+                            if int(user_vars_dict[var_usr]) >= int(var_cond):
+                                response.update({'qual':'match'})
+                                return response
+                        case '>':
+                            if int(user_vars_dict[var_usr]) > int(var_cond):
+                                response.update({'qual':'match'})
+                                return response
+                        case '<=':
+                            if int(user_vars_dict[var_usr]) <= int(var_cond):
+                                response.update({'qual':'match'})
+                                return response
+                        case '<':
+                            if int(user_vars_dict[var_usr]) < int(var_cond):
+                                response.update({'qual':'match'})
+                                return response
+                except: pass
     return response
 
 # Обработчик БЛОКА СООБЩЕНИЙ бота
@@ -82,7 +99,9 @@ async def content_block(message : types.Message):
                 'var_name':save_to,
                 'var_value':message.text
             }
-            resp = await AsyncSetVar(BN, AT, var_data)
+            if message.text == "/start":
+                return True
+            await AsyncSetVar(BN, AT, var_data)
             save_to = None
             await content_block(message)
             return True
@@ -101,17 +120,23 @@ async def content_block(message : types.Message):
             return True
 
     # Формирование ответа
-    text = block_data['text']
+    
+    text = await VarsReplace(block_data['text'], resp_api_vrs['vars'])
     delay = int(block_data['delay'])
     kb_name = block_data['keyboard']
     get_input = block_data['input_state']
     save_to = block_data['save_to_var']
+    value_to_save = block_data['value_to_save']
 
     kb = ReplyKeyboardRemove()
     if kb_name != 'null': kb = await create_keyboard(BN, AT, kb_name, message.from_user.id)
-
+    block_accessable = False
     conditions_info = block_data['conditions']
-    if conditions_info == {}:
+    if conditions_info == {}: block_accessable = True
+    else:
+        condition_match = await ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
+        if condition_match['qual'] == 'match': block_accessable = True
+    if block_accessable:
         sleep(delay)
         await message.answer(text, reply_markup = kb)
         NB = None
@@ -119,17 +144,14 @@ async def content_block(message : types.Message):
             AutoCall = True
             NB = block_data['next_block']
         if get_input == 'true': InputMode = True
-    else:
-        condition_match = await ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
-        if condition_match['qual'] == 'match':
-            sleep(delay)
-            await message.answer(text, reply_markup = kb)
-            NB = None
-            if kb_name == 'null': 
-                AutoCall = True
-                NB = block_data['next_block']
-            if get_input == 'true': InputMode = True
-        else: pass
+        if value_to_save != 'null':
+            var_data = {
+                'usr_id':message.from_user.id,
+                'var_name':save_to,
+                'var_value':value_to_save
+            }
+            await AsyncSetVar(BN, AT, var_data)
+            save_to = None
 
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
@@ -151,9 +173,8 @@ async def command_react(message : types.Message):
                 "usr_name": f'{message.from_user.first_name} {message.from_user.last_name}',
                 "usr_tag": USER_TAG
             }
-            resp = await AsyncAddUser(BN, AT, data)
+            await AsyncAddUser(BN, AT, data)
             
-            # !!!Сюда надо добавить ответ при первом касании из админки (в админку добавить поле для ответа на первое касание)!!!
             text = commands_info['first_touch']['text']
             if commands_info['first_touch']['keyboard'] == 'null': kb = ReplyKeyboardRemove()
             else: kb = await create_keyboard(BN, AT, commands_info['first_touch']['keyboard'], message.from_user.id)
@@ -190,4 +211,3 @@ def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     dp.register_message_handler(command_react, commands = commands_list)
     # dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")
     dp.register_message_handler(content_block, state = "*")
-    
