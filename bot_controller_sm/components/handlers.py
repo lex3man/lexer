@@ -44,45 +44,32 @@ async def VarsReplace(raw_text, user_vars):
 async def ConditionsMatch(conditions_info, user_info, user_vars):
     user_tags_list = user_info['tags']
     user_vars_dict = user_vars['vars']
-    response = {
-        'condition':'all',
-        'qual':'dismatch'
-    }
     match_result = False
     for condition_key in conditions_info.keys():
         if conditions_info[condition_key]['usr_tag'] != 'None':
-            response.update({'condition':'tag', 'qual':'dismatch'})
-            if conditions_info[condition_key]['usr_tag'] in user_tags_list: 
-                response.update({'qual':'match', 'condition_key':condition_key})
-            return response
-        response.update({'condition':'var', 'qual':'dismatch'})
+            match_result = True
+            if conditions_info[condition_key]['usr_tag'] not in user_tags_list: return False
         quality = conditions_info[condition_key]['qual']
         var_usr = conditions_info[condition_key]['var_key']
         var_cond = conditions_info[condition_key]['var_value']
         try:
             match quality:
-                case '=': 
-                    if user_vars_dict[var_usr] == var_cond:
-                        response.update({'qual':'match'})
-                        return response
+                case '=':
+                    if user_vars_dict[var_usr] == var_cond: match_result = True
+                    else: return False
                 case '>=':
-                    if float(user_vars_dict[var_usr]) >= float(var_cond):
-                        response.update({'qual':'match'})
-                        return response
+                    if float(user_vars_dict[var_usr]) >= float(var_cond): match_result = True
+                    else: return False
                 case '>':
-                    if float(user_vars_dict[var_usr]) > float(var_cond):
-                        response.update({'qual':'match'})
-                        return response
+                    if float(user_vars_dict[var_usr]) > float(var_cond): match_result = True
+                    else: return False
                 case '<=':
-                    if float(user_vars_dict[var_usr]) <= float(var_cond):
-                        response.update({'qual':'match'})
-                        return response
+                    if float(user_vars_dict[var_usr]) <= float(var_cond): match_result = True
+                    else: return False
                 case '<':
-                    if float(user_vars_dict[var_usr]) < float(var_cond):
-                        response.update({'qual':'match'})
-                        return response
-        except: pass
-        if response['qual'] == 'match': match_result = True
+                    if float(user_vars_dict[var_usr]) < float(var_cond): match_result = True
+                    else: return False
+        except: return False
     return match_result
 
 async def UnknownBlock(message : types.Message):
