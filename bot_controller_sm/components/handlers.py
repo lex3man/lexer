@@ -48,43 +48,59 @@ async def ConditionsMatch(conditions_info, user_info, user_vars):
         'condition':'all',
         'qual':'dismatch'
     }
-    if conditions_info != {}:
-        
-        for condition_key in conditions_info.keys():
-            if conditions_info[condition_key]['usr_tag'] != 'None':
-                response.update({'condition':'tag', 'qual':'dismatch'})
-                if conditions_info[condition_key]['usr_tag'] in user_tags_list: 
-                    response.update({'qual':'match', 'condition_key':condition_key})
-                    return response
-            else:
-                response.update({'condition':'var', 'qual':'dismatch'})
-                quality = conditions_info[condition_key]['qual']
-                var_usr = conditions_info[condition_key]['var_key']
-                var_cond = conditions_info[condition_key]['var_value']
-                try:
-                    match quality:
-                        case '=': 
-                            if user_vars_dict[var_usr] == var_cond:
-                                response.update({'qual':'match'})
-                                return response
-                        case '>=':
-                            if int(user_vars_dict[var_usr]) >= int(var_cond):
-                                response.update({'qual':'match'})
-                                return response
-                        case '>':
-                            if int(user_vars_dict[var_usr]) > int(var_cond):
-                                response.update({'qual':'match'})
-                                return response
-                        case '<=':
-                            if int(user_vars_dict[var_usr]) <= int(var_cond):
-                                response.update({'qual':'match'})
-                                return response
-                        case '<':
-                            if int(user_vars_dict[var_usr]) < int(var_cond):
-                                response.update({'qual':'match'})
-                                return response
-                except: pass
-    return response
+    match_result = False
+    for condition_key in conditions_info.keys():
+        if conditions_info[condition_key]['usr_tag'] != 'None':
+            response.update({'condition':'tag', 'qual':'dismatch'})
+            if conditions_info[condition_key]['usr_tag'] in user_tags_list: 
+                response.update({'qual':'match', 'condition_key':condition_key})
+            return response
+        response.update({'condition':'var', 'qual':'dismatch'})
+        quality = conditions_info[condition_key]['qual']
+        var_usr = conditions_info[condition_key]['var_key']
+        var_cond = conditions_info[condition_key]['var_value']
+        try:
+            match quality:
+                case '=': 
+                    if user_vars_dict[var_usr] == var_cond:
+                        response.update({'qual':'match'})
+                        return response
+                case '>=':
+                    if float(user_vars_dict[var_usr]) >= float(var_cond):
+                        response.update({'qual':'match'})
+                        return response
+                case '>':
+                    if float(user_vars_dict[var_usr]) > float(var_cond):
+                        response.update({'qual':'match'})
+                        return response
+                case '<=':
+                    if float(user_vars_dict[var_usr]) <= float(var_cond):
+                        response.update({'qual':'match'})
+                        return response
+                case '<':
+                    if float(user_vars_dict[var_usr]) < float(var_cond):
+                        response.update({'qual':'match'})
+                        return response
+        except: pass
+        if response['qual'] == 'match': match_result = True
+    return match_result
+
+async def UnknownBlock(message : types.Message):
+    global AT, BN, NB, InputMode, save_to, AutoCall
+    if InputMode:
+        InputMode = False
+        var_data = {
+            'usr_id':message.from_user.id,
+            'var_name':save_to,
+            'var_value':message.text
+        }
+        if message.text == "/start":
+            return True
+        await AsyncSetVar(BN, AT, var_data)
+        save_to = None
+        await content_block(message)
+        return True
+    else: await message.answer('Однажды здесь будет ответ искусственного интеллекта', reply_markup = ReplyKeyboardRemove())
 
 # Обработчик БЛОКА СООБЩЕНИЙ бота
 async def content_block(message : types.Message):
@@ -92,19 +108,6 @@ async def content_block(message : types.Message):
     resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
     resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
     if AutoCall:
-        if InputMode:
-            InputMode = False
-            var_data = {
-                'usr_id':message.from_user.id,
-                'var_name':save_to,
-                'var_value':message.text
-            }
-            if message.text == "/start":
-                return True
-            await AsyncSetVar(BN, AT, var_data)
-            save_to = None
-            await content_block(message)
-            return True
         resp_api_blck = await AsyncGetContent(BN, AT, ['blocks', NB])
         block_data = resp_api_blck['blocks'][NB]
         AutoCall = False
@@ -120,7 +123,6 @@ async def content_block(message : types.Message):
             return True
 
     # Формирование ответа
-    
     text = await VarsReplace(block_data['text'], resp_api_vrs['vars'])
     delay = int(block_data['delay'])
     kb_name = block_data['keyboard']
@@ -135,7 +137,7 @@ async def content_block(message : types.Message):
     if conditions_info == {}: block_accessable = True
     else:
         condition_match = await ConditionsMatch(conditions_info, resp_api_usr[str(message.from_user.id)], resp_api_vrs)
-        if condition_match['qual'] == 'match': block_accessable = True
+        if condition_match: block_accessable = True
     if block_accessable:
         sleep(delay)
         await message.answer(text, reply_markup = kb)
@@ -192,7 +194,7 @@ async def command_react(message : types.Message):
             if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
         else:
             condition_match = await ConditionsMatch(conditions_info, usr_info, resp_api_vrs)
-            if condition_match['qual'] == 'match':
+            if condition_match:
                 await message.answer(text, reply_markup = kb)
                 NB = None
                 if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
@@ -209,5 +211,5 @@ def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     button_list = MakeButtonsList(auth_token, bot_name)
     
     dp.register_message_handler(command_react, commands = commands_list)
-    # dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")
-    dp.register_message_handler(content_block, state = "*")
+    dp.register_message_handler(content_block, Text(equals = button_list, ignore_case = True), state = "*")
+    dp.register_message_handler(UnknownBlock, state = "*")
