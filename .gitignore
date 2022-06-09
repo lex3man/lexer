@@ -16,6 +16,7 @@ sdist/
 var/
 *.egg-info/
 .installed.cfg
+.env
 *.egg
 # Installer logs
 pip-log.txt

@@ -94,8 +94,9 @@ if __name__ == '__main__':
         login = None
         passwd = None
     
+    server_host = 'https://' + api_connector.SERVER_HOST + '/auth/token'
     while True:
-        resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})
+        resp = requests.post(server_host, json = {"username":login, "password":passwd, "grant_type":"password"})
         try: 
             resp.json()['token_type'] == 'Bearer'
             break
