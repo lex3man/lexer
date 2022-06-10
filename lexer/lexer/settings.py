@@ -11,9 +11,17 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 """
 import os
 from pathlib import Path
+import environ
+
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 # LOGGING = {
 #     'version': 1,
@@ -38,13 +46,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#fyr+kis-j3y2ez1bijh^^1trbu)t4gd(=bmik5+jn#7u54wel'
+# SECRET_KEY = 'django-insecure-#fyr+kis-j3y2ez1bijh^^1trbu)t4gd(=bmik5+jn#7u54wel'
+SECRET_KEY = env('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = env('DEBUG')
 
-ALLOWED_HOSTS = ['dev.insiderlab.ru']
-
+# ALLOWED_HOSTS = ['dev.insiderlab.ru']
+ALLOWED_HOSTS = [env('API_HOST')]
 
 # Application definition
 
@@ -115,7 +125,7 @@ WSGI_APPLICATION = 'lexer.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'lexer_v2',
+        'NAME': env('DB_NAME'),
         'USER': 'lex3man',
         'PASSWORD': 'Admin192168',
         'HOST': 'localhost',
