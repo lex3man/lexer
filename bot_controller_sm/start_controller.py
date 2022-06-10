@@ -1,12 +1,11 @@
 from components import api_connector
 import asyncio, logging, requests
-import subprocess
+import subprocess, os
 from sys import argv
 from flask import Flask, request
 
 
 RUNNING_BOTS = {'status':'OK'}
-BOT_INIT_SCRIPT = '/var/www/dev.insiderlab.ru/bot_controller_sm/components/bot_starter.py'
 
 bots_names = []
 active_bots_names = []
@@ -22,7 +21,8 @@ async def start_bots(bots_names: list, auth_token):
         api_token = bot_info[bot_name]['token']
 
         # запуск бота
-        bot_process = subprocess.Popen(['python', BOT_INIT_SCRIPT, api_token, auth_token, bot_name])
+        script_path = os.environ['PROJ_PATH'] + '/bot_controller_sm/components/bot_starter.py'
+        bot_process = subprocess.Popen(['python', script_path, api_token, auth_token, bot_name])
         RUNNING_BOTS.update({bot_name:bot_process})
 
         await asyncio.sleep(2)
@@ -86,7 +86,7 @@ async def main(bots_info, AT):
     return None
 
 if __name__ == '__main__':
-
+    
     try:
         login = argv[1]
         passwd = argv[2]
@@ -94,8 +94,9 @@ if __name__ == '__main__':
         login = None
         passwd = None
     
+    server_host = 'https://' + api_connector.SERVER_HOST + '/auth/token'
     while True:
-        resp = requests.post('https://dev.insiderlab.ru/auth/token', json = {"username":login, "password":passwd, "grant_type":"password"})
+        resp = requests.post(server_host, json = {"username":login, "password":passwd, "grant_type":"password"})
         try: 
             resp.json()['token_type'] == 'Bearer'
             break

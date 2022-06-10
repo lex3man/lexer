@@ -1,6 +1,6 @@
-import aiohttp, requests, json
+import aiohttp, requests, os
 
-SERVER_HOST = 'dev.insiderlab.ru'
+SERVER_HOST = os.environ['API_HOST']
 
 def GetContent(bot_name, auth_token, target):
     head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}

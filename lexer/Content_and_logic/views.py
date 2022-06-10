@@ -126,11 +126,14 @@ class Get_content(View):
                 for ft in fts:
                     try: kb_name = ft.keyboard.name
                     except: kb_name = 'None'
+                    try: 
+                        nb = ft.next_block
+                        nb_name = nb.block_id
+                    except: nb_name = 'None'
                     first_touch = {
                         'text':ft.text,
                         'keyboard':kb_name,
-                        'input_state':ft.input_state,
-                        'next_block':ft.next_block
+                        'next_block':nb_name
                     }
                 data.update({
                     'conditions':conditions,

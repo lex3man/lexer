@@ -105,8 +105,7 @@ class FirstTouch(models.Model):
     language = models.CharField(verbose_name = 'Язык перевода', max_length = 5, choices = LANG_CHOICES, default = 'RUS')
     text = models.TextField(verbose_name = 'Текст реакции', blank = True, null = True)
     keyboard = models.ForeignKey(keyboard, verbose_name = 'Клавиатура', on_delete = models.SET_NULL, blank = True, null = True, default = None)
-    input_state = models.BooleanField(verbose_name = 'Ожидание ввода?', default = False)
-    next_block = models.CharField(verbose_name = 'Следующий блок', max_length = 50, default = '-', null = True, blank = True)
+    next_block = models.ForeignKey(TypeBlock, verbose_name = 'Следующий блок', null = True, blank = True, on_delete = models.SET_NULL)
     
     class Meta:
         verbose_name = 'Первое касание'

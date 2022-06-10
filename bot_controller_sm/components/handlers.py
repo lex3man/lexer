@@ -26,7 +26,7 @@ def MakeCommandList(auth_token, bot_name):
         commands_list.append(k)
     return commands_list
 
-async def VarsReplace(raw_text, user_vars):
+async def TextVarsReplace(raw_text, user_vars):
     get_text = raw_text.split('#{')
     get_vars = []
     for i in range(len(get_text)):
@@ -82,8 +82,6 @@ async def UnknownBlock(message : types.Message):
             'var_name':save_to,
             'var_value':message.text
         }
-        if message.text == "/start":
-            return True
         await AsyncSetVar(BN, AT, var_data)
         save_to = None
         await content_block(message)
@@ -107,11 +105,20 @@ async def content_block(message : types.Message):
             block_key = block_keys[0]
             block_data = resp_api_blck['answer'][block_key]
         except:
-            await message.answer('error')
-            return True
+            if InputMode:
+                InputMode = False
+                var_data = {
+                    'usr_id':message.from_user.id,
+                    'var_name':save_to,
+                    'var_value':message.text
+                }
+                await AsyncSetVar(BN, AT, var_data)
+                save_to = None
+                await content_block(message)
+            else: await message.answer('error')
 
     # Формирование ответа
-    text = await VarsReplace(block_data['text'], resp_api_vrs['vars'])
+    text = await TextVarsReplace(block_data['text'], resp_api_vrs['vars'])
     delay = int(block_data['delay'])
     kb_name = block_data['keyboard']
     get_input = block_data['input_state']
@@ -133,7 +140,10 @@ async def content_block(message : types.Message):
         if kb_name == 'null': 
             AutoCall = True
             NB = block_data['next_block']
-        if get_input == 'true': InputMode = True
+        if get_input == 'true': 
+            NB = block_data['next_block']
+            AutoCall = True
+            InputMode = True
         if value_to_save != 'null':
             var_data = {
                 'usr_id':message.from_user.id,
@@ -145,51 +155,54 @@ async def content_block(message : types.Message):
 
 # Обработчик КОМАНД боту
 async def command_react(message : types.Message):
-    global AT, BN, NB, AutoCall
+    global AT, BN, NB, AutoCall, save_to, InputMode
     cmd = message.text.replace('/','').split(' ')[0]
     commands_info = await AsyncGetContent(BN, AT, 'commands')
-    text = commands_info['commands'][cmd]['text']
-    kb = ReplyKeyboardRemove()
     resp_api_usr = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'user')
-    if commands_info['commands'][cmd]['keyboard'] == 'null': kb = ReplyKeyboardRemove()
-    else: kb = await create_keyboard(BN, AT, commands_info['commands'][cmd]['keyboard'], message.from_user.id)
-    if cmd == 'start':
-        if resp_api_usr['status'] != 'OK':
-            USER_TAG = ''
-            if len(message.text) > 6: USER_TAG = message.text.split()[1]
-            data = {
-                "usr_id": message.from_user.id,
-                "teleg": message.from_user.username,
-                "usr_name": f'{message.from_user.first_name} {message.from_user.last_name}',
-                "usr_tag": USER_TAG
-            }
-            await AsyncAddUser(BN, AT, data)
-            
-            text = commands_info['first_touch']['text']
-            if commands_info['first_touch']['keyboard'] == 'null': kb = ReplyKeyboardRemove()
-            else: kb = await create_keyboard(BN, AT, commands_info['first_touch']['keyboard'], message.from_user.id)
-            await message.answer(text, reply_markup = kb)
+    kb = ReplyKeyboardRemove()
+    if commands_info['commands'][cmd]['keyboard'] != 'null': 
+        kb = await create_keyboard(BN, AT, commands_info['commands'][cmd]['keyboard'], message.from_user.id)
     
-    resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
+    # Если пользователь есть в базе собеседников
     if resp_api_usr['status'] == 'OK':
+        resp_api_vrs = await AsyncGetUserInfo(BN, AT, message.from_user.id, 'vars')
+        text = await TextVarsReplace(commands_info['commands'][cmd]['text'], resp_api_vrs['vars'])
         usr_info = resp_api_usr[str(message.from_user.id)]
         
         # Проверка условий выполнения команды
+        block_accessable = False
         conditions_info = commands_info['conditions'][cmd]
-        if conditions_info == {}:
-            await message.answer(text, reply_markup = kb)
-            NB = None
-            if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
+        if conditions_info == {}: block_accessable = True
         else:
             condition_match = await ConditionsMatch(conditions_info, usr_info, resp_api_vrs)
-            if condition_match:
-                await message.answer(text, reply_markup = kb)
-                NB = None
-                if commands_info['commands'][cmd]['keyboard'] == 'null': NB = commands_info['commands'][cmd]['next_block']
-        
-        if NB is not None:
+            if condition_match: block_accessable = True
+        if block_accessable:
+            await message.answer(text, reply_markup = kb)
+            NB = None
+            if commands_info['commands'][cmd]['keyboard'] == 'null': 
+                AutoCall = True
+                NB = commands_info['commands'][cmd]['next_block']
+    
+    # Если пользователя нет в базе собеседников
+    else:
+        USER_TAG = ''
+        if len(message.text) > 6: USER_TAG = message.text.split()[1]
+        data = {
+            "usr_id": message.from_user.id,
+            "teleg": message.from_user.username,
+            "usr_name": f'{message.from_user.first_name} {message.from_user.last_name}',
+            "usr_tag": USER_TAG
+        }
+        await AsyncAddUser(BN, AT, data)
+        text = commands_info['first_touch']['text']
+        if commands_info['first_touch']['keyboard'] == 'None':
+            kb = ReplyKeyboardRemove()
             AutoCall = True
-            await content_block(message)
+            NB = commands_info['first_touch']['next_block']
+        else: kb = await create_keyboard(BN, AT, commands_info['first_touch']['keyboard'], message.from_user.id)
+        
+        await message.answer(text, reply_markup = kb)
+    if AutoCall: await content_block(message)
 
 def register_message_handlers(dp:Dispatcher, auth_token, bot_name):
     global AT, BN
