@@ -12,7 +12,6 @@ active_bots_names = []
 auth_token = None
 
 app = Flask(__name__)
-# app.config['SECRET_KEY'] = 'AES_vj5knSDfvknLa5sdflTkn3cvjFnsadlf7Dkjhbasc2Dha6dWf4nbhj8Cbs3dhb'
 
 async def start_bots(bots_names: list, auth_token):
     global RUNNING_BOTS
@@ -88,8 +87,8 @@ async def main(bots_info, AT):
 if __name__ == '__main__':
     
     try:
-        login = argv[1]
-        passwd = argv[2]
+        login = os.environ['AUTH_NAME']
+        passwd = os.environ['AUTH_PASS']
     except: 
         login = None
         passwd = None
