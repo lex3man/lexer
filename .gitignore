@@ -17,6 +17,7 @@ var/
 *.egg-info/
 .installed.cfg
 .env
+lexer.ini
 *.egg
 # Installer logs
 pip-log.txt
