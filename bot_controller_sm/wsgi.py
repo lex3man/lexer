@@ -20,7 +20,7 @@ async def start_bots(bots_names: list, auth_token):
         script_path = env['PROJ_PATH'] + '/bot_controller_sm/components/bot_starter.py'
         bot_process = subprocess.Popen(['python', script_path, api_token, auth_token, bot_name])
         print(bot_process.pid)
-        red_env.set(bot_name, bot_process.pid)
+        red_env.mset({bot_name:bot_process.pid})
         
         await asyncio.sleep(2)
         print(f'{bot_name} started')
