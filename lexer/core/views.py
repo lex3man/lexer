@@ -12,6 +12,20 @@ def Index(request):
     cont = {}
     return HttpResponse(template.render(cont, request))
 
+# Проверка токена
+def auth_check(auth_header):
+    if not auth_header:
+        return False
+    if len(auth_header) == 1:
+        return False
+    elif len(auth_header) > 2:
+        return False
+    try:
+        token = auth_header[1].decode('utf-8')
+        AccessToken.objects.get(key = token)
+        return True
+    except: return False
+
 # Отображение переменных окружения
 class Env_vars(View):
     def get(self, request):
@@ -29,28 +43,14 @@ class Env_vars(View):
 class Bot_info(View):
     def get(self, request):
 
-        auth_header = authentication.get_authorization_header(request).split()
+        auth_header = auth_check(authentication.get_authorization_header(request).split())
+        data = {'status':'error'}
 
-        if not auth_header:
-            return JsonResponse({"status": "error"})
-
-        if len(auth_header) == 1:
-            # Некорректный заголовок токена, в заголовке передан один элемент
-            return JsonResponse({"status": "error"})
-        elif len(auth_header) > 2:
-            # Некорректный заголовок токена, какие-то лишние пробельные символы
-            return JsonResponse({"status": "error"})
-
-        try:
-            token = auth_header[1].decode('utf-8')
-            AccessToken.objects.get(key = token)
+        if auth_header:
             bot_name = request.GET.get('bot_name')
             bots = TgBot.objects.filter(caption = bot_name)
             if bot_name == 'all': bots = TgBot.objects.all()
 
-            data = {
-                'status':'error',
-            }
             for bot in bots:
                 data.update({
                     'status':'success',
@@ -62,5 +62,5 @@ class Bot_info(View):
                     }
                 })
             return JsonResponse(data)
-        except:
-            return JsonResponse({"status": "error"})
+        else:
+            return JsonResponse(data)

@@ -22,5 +22,7 @@ urlpatterns = [
     path('', Index),
     path('admin/', admin.site.urls),
     path('API_v1/', include('core.urls')),
+    path('users_api/', include('Users_assets.urls')),
+    path('content/', include('Content_and_logic.urls')),
     path('auth/token', ObtainToken.as_view()),
 ]

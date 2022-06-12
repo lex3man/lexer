@@ -1,4 +1,4 @@
-#!/var/www/dev.insiderlab.ru/server/bin/python3.10
+#!/var/www/dev.insiderlab.ru/server/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
