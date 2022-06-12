@@ -1,0 +1,14 @@
+[Unit]
+Description=Telegram Bot
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+
+WorkingDirectory=/var/www/lexer.insiderlab.ru/lexer/tgbot/
+Environment="PYTHONPATH=/var/www/lexer.insiderlab.ru/lexer/tgbot/"
+ExecStart=/var/www/lexer.insiderlab.ru/server/bin/python /var/www/lexer.insiderlab.ru/lexer/tgbot/bot_run.py
+
+[Install]
+WantedBy=multi-user.target
