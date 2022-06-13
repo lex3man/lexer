@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="/var/www/dev.insiderlab.ru/server"
+VIRTUAL_ENV="/home/master/www/fountcore.tech/dev/lexer_v2/server"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"
