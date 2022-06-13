@@ -2,6 +2,14 @@ from core.models import TgBot
 from Content_and_logic.models import TypeBlock, Command, keyboard, keyboard_button
 import random, string
 
+# class Bot:
+#     def __fillActions(self, action_name):
+#         Action()
+#         return Action
+    
+#     def execute(self, header, *args):
+#         result = self.__fillActions(header).execute(*args)
+#         return JsonResp(result)
 
 def GetSessionID():
     code = ''.join(random.choices(string.ascii_letters, k = 15))
