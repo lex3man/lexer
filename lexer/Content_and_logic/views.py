@@ -9,15 +9,6 @@ from rest_framework import authentication
 
 import json
 
-# class Bot:
-#     def __fillActions(self, action_name):
-#         Action()
-#         return Action
-    
-#     def execute(self, header, *args):
-#         result = self.__fillActions(header).execute(*args)
-#         return JsonResp(result)
-
 class BotTest(View):
     def get(self, request):
         data = {'status':'error'}
