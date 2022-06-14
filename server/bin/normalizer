@@ -1,4 +1,4 @@
-#!/home/master/www/fountcore.tech/dev/lexer_v2/server/bin/python3.10
+#!/home/master/www/www.fountcore.tech/dev/lexer_v2/server/bin/python3.10
 # -*- coding: utf-8 -*-
 import re
 import sys

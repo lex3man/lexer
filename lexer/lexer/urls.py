@@ -17,12 +17,25 @@ from django.contrib import admin
 from django.urls import path, include
 from core.views import Index
 from bearer_auth.views import ObtainToken
+from pathlib import Path
+import environ, os
+
+env = environ.Env(
+    # set casting, default value
+    DEBUG=(bool, False)
+)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+opt = ''
+if env('API_HOST') == 'dev.fountcore.tech': opt = 'lexer/'
 
 urlpatterns = [
-    path('', Index),
-    path('admin/', admin.site.urls),
-    path('API_v1/', include('core.urls')),
-    path('users_api/', include('Users_assets.urls')),
-    path('content/', include('Content_and_logic.urls')),
-    path('auth/token', ObtainToken.as_view()),
+    path(opt + '', Index),
+    path(opt + 'admin/', admin.site.urls),
+    path(opt + 'API_v1/', include('core.urls')),
+    path(opt + 'users_api/', include('Users_assets.urls')),
+    path(opt + 'content/', include('Content_and_logic.urls')),
+    path(opt + 'auth/token', ObtainToken.as_view()),
 ]
