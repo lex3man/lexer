@@ -3,11 +3,13 @@ import asyncio, logging, requests
 import subprocess, os, redis, signal
 from flask import Flask, request
 
-red_env = redis.Redis(host = "localhost", port = 6379, charset = "utf-8", decode_responses = True)
+if os.environ['STATE'] == 'dev': red_db = 0
+if os.environ['STATE'] == 'test': red_db = 1
+if os.environ['STATE'] == 'prod': red_db = 2
+red_env = redis.Redis(host = "localhost", port = 6379, charset = "utf-8", decode_responses = True, db = red_db)
 bots_names = []
 active_bots_names = []
 auth_token = None
-env = os.environ
 bots_not_running = True
 
 async def start_bots(bots_names: list, auth_token):
@@ -17,7 +19,7 @@ async def start_bots(bots_names: list, auth_token):
         api_token = bot_info[bot_name]['token']
 
         # запуск бота
-        script_path = env['PROJ_PATH'] + '/bot_controller_sm/components/bot_starter.py'
+        script_path = red_env.get('PROJ_PATH') + '/bot_controller_sm/components/bot_starter.py'
         bot_process = subprocess.Popen(['python', script_path, api_token, auth_token, bot_name])
         print(bot_process.pid)
         red_env.mset({bot_name:bot_process.pid})
@@ -64,9 +66,10 @@ async def main(bots_info, AT):
 def application():
     print('STARTS APP')
     global bots_not_running
+    os.environ['API_HOST'] = red_env.get('API_HOST')
     try:
-        login = env['AUTH_NAME']
-        passwd = env['AUTH_PASS']
+        login = red_env.get('AUTH_NAME')
+        passwd = red_env.get('AUTH_PASS')
         print('ENV OK')
     except: 
         login = None
