@@ -71,6 +71,8 @@ class TypeBlock(models.Model):
     input_state = models.BooleanField(verbose_name = 'Ожидание ввода?', default = False)
     save_to_var = models.CharField(verbose_name = 'Имя переменной для сохранения ввода', max_length = 50, blank = True, null = True, default = None)
     value_to_save = models.CharField(verbose_name = 'Значение переменной (если ввод не ожидается)', max_length = 150, blank = True, null = True, default = None)
+    add_tag = models.ManyToManyField(UserTag, verbose_name = 'Добавить тэг', related_name = 'add_tag', blank = True)
+    remove_tag = models.ManyToManyField(UserTag, verbose_name = 'Удалить тэг', related_name = 'remove_tag', blank = True)
     next_block = models.ForeignKey('self', verbose_name = 'Следующий блок', null = True, blank = True, on_delete = models.SET_NULL)
     delay = models.IntegerField(verbose_name = 'Задержка перед реакцией (секунды)', default = 0)
     conditions = models.ManyToManyField(Condition, verbose_name = 'Условия', blank = True)

@@ -1,10 +1,10 @@
 from datetime import date
-from tabnanny import verbose
 from django.db import models
 from core.models import TgBot
 
 class UserTag(models.Model):
     tag_id = models.CharField(verbose_name = 'Tag ID', max_length = 15, unique = True)
+    from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
     caption = models.CharField(verbose_name = 'Наименование', max_length = 50)
     priority = models.IntegerField(verbose_name = 'Приоритет', default = 1)
     description = models.TextField(verbose_name = 'Описание тега')
