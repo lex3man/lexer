@@ -1,5 +1,5 @@
 from aiogram import Dispatcher, types
-from api_connector import AsyncSetVar, GetContent, AsyncGetContent, AsyncAddUser, AsyncGetUserInfo
+from api_connector import AsyncSetVar, GetContent, AsyncGetContent, AsyncAddUser, AsyncGetUserInfo, AsyncSetTags
 from keyboard_creator import create_keyboard
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
@@ -119,11 +119,8 @@ async def content_block(message : types.Message):
     if AutoCall:
         resp_api_blck = await AsyncGetContent(BN, AT, ['blocks', NB])
         AutoCall = False
+        block_data = resp_api_blck['blocks'][NB]
         
-        if resp_api_blck['blocks'][NB] != 'null':
-            block_data = resp_api_blck['blocks'][NB]
-            AutoCall = True
-    
     else:
         resp_api_blck = await AsyncGetContent(BN, AT, ['answer', message.text])
         
@@ -155,6 +152,7 @@ async def content_block(message : types.Message):
     get_input = block_data['input_state']
     save_to = block_data['save_to_var']
     value_to_save = block_data['value_to_save']
+    tags_action = block_data['tags_action']
     kb = ReplyKeyboardRemove()
     if kb_name != 'null': kb = await create_keyboard(BN, AT, kb_name, message.from_user.id)
     block_accessable = False
@@ -170,13 +168,32 @@ async def content_block(message : types.Message):
         await message.answer(text, reply_markup = kb)
         NB = None
         
+        if tags_action['add'] != []:
+            tags_data = {
+                'usr_id':message.from_user.id,
+                'tags_action':'add',
+                'tags':tags_action['add']
+            }
+            t = await AsyncSetTags(BN, AT, tags_data)
+            await message.answer(t)
+        
+        if tags_action['remove'] != []:
+            tags_data = {
+                'usr_id':message.from_user.id,
+                'tags_action':'remove',
+                'tags':tags_action['remove']
+            }
+            t = await AsyncSetTags(BN, AT, tags_data)
+            await message.answer(t)
+        
         if kb_name == 'null': 
-            AutoCall = True
-            NB = block_data['next_block']
+            if block_data['next_block'] != 'null':
+                AutoCall = True
+                NB = block_data['next_block']
         
         if get_input == 'true': 
             NB = block_data['next_block']
-            AutoCall = True
+            # AutoCall = True
             InputMode = True
         
         if value_to_save != 'null':
@@ -252,8 +269,7 @@ async def command_react(message : types.Message):
         else: kb = await create_keyboard(BN, AT, commands_info['first_touch']['keyboard'], message.from_user.id)
         await message.answer(text, reply_markup = kb)
     
-    if AutoCall: 
-        AutoCall = False
+    if AutoCall:
         await content_block(message)
 
 
