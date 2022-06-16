@@ -128,10 +128,10 @@ class Get_content(View):
                     items = None
                     fts = None
 
-                conditions = {}
+                conditions = {'start':{}}
                 for item in items:
                     info = {}
-                    conditions.update({'start':{}})
+                    
                     for item_cond in item.conditions.all():
                         
                         try: 
@@ -180,22 +180,23 @@ class Get_content(View):
         data.update({'status':'OK'})
         
         try:
+            cont.update({
+                "start": {
+                    "id": "0",
+                    "from_bot": "",
+                    "command_id": "",
+                    "caption": "start",
+                    "language": "",
+                    "text": "",
+                    "keyboard": "null",
+                    "next_block": "null",
+                    "delay": "0"
+                }
+            })
             for get_item in items:
                 get_fields_info = {}
                 
-                cont.update({
-                    "start": {
-                        "id": "0",
-                        "from_bot": "",
-                        "command_id": "",
-                        "caption": "start",
-                        "language": "",
-                        "text": "",
-                        "keyboard": "null",
-                        "next_block": "null",
-                        "delay": "0"
-                    }
-                })
+            
                 for field_info in fields_info:
                     try: ser_data = str(json.dumps(getattr(get_item, field_info.name), separators=(',', ':'), ensure_ascii = False, default = str)).replace('"','')
                     except: ser_data = ''
