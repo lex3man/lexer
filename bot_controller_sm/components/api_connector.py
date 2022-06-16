@@ -19,6 +19,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
     head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}
     PATH = '/content/'
     SERVER_URL = 'https://' + SERVER_HOST + PATH
+
     if isinstance(target, str):
         data = {
             'botname':bot_name,
@@ -26,6 +27,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
             'lang':'RUS',
             'block':''
         }
+
     elif isinstance(target, list):
         data = {
             'botname':bot_name,
@@ -33,6 +35,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
             'head':target[0],
             'block':target[1]
         }
+
     async with aiohttp.ClientSession(headers = head) as session:
         async with session.get(SERVER_URL, params = data) as resp:
             response = await resp.json()
@@ -71,6 +74,22 @@ async def AsyncAddUser(bot_name, auth_token, data):
             response = await resp.json()
             return response
         
+async def AsyncSetTags(bot_name, auth_token, data):
+    PATH = '/users_api/set_var/'
+    SERVER_URL = 'https://' + SERVER_HOST + PATH
+    head = {'Authorization': 'Bearer ' + auth_token}
+    push_params = {
+        'bot_name':bot_name,
+        'head':'set_tags',
+        'usr_id':data['usr_id'],
+        'tags_action':data['tags_action'],
+        'tags':data['tags']
+    }
+    async with aiohttp.ClientSession(headers = head) as session:
+        async with session.post(SERVER_URL, json = push_params) as resp:
+            response = await resp.json()
+            return response
+
 async def AsyncSetVar(bot_name, auth_token, data):
     PATH = '/users_api/set_var/'
     SERVER_URL = 'https://' + SERVER_HOST + PATH
