@@ -106,7 +106,7 @@ async def UnknownBlock(message : types.Message):
         await content_block(message)
         return True
     
-    else: await message.answer('Однажды здесь будет ответ искусственного интеллекта', reply_markup = ReplyKeyboardRemove())
+    else: await message.answer('?!', reply_markup = ReplyKeyboardRemove())
 
 
 
