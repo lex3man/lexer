@@ -119,3 +119,27 @@ async def AsyncGetUserInfo(bot_name, auth_token, user_id, target):
         async with session.get(SERVER_URL, params = data) as resp:
             response = await resp.json()
             return response
+
+
+
+# FOR SENDINGS!!!
+#---------------------------------------------------
+async def get_group_users_info(usr_id, group_name):
+    async with aiohttp.ClientSession() as session:
+        async with session.post('https://' + SERVER_HOST + 'config_api/get_info/', json = {'usr_id':usr_id, 'group':group_name, 'head':'group_members'}) as resp:
+            response = await resp.json()
+            return(response)
+
+async def msg_logging(temp_objects):
+    async with aiohttp.ClientSession() as session:
+        async with session.get('https://' + SERVER_HOST + 'msg_log/sent/') as resp:
+            response = await resp.json()
+            for key in response.keys():
+                if temp_objects.hgetall(key) == {}:
+                    temp_objects.hmset(key, response[key])
+                    SCHEDULE_TIME = response[key]['sending_time'].replace('-','.').replace(' ','.').replace(':','.').split('.')
+                    sending_data = {
+                        'groups':'',
+                        'text':''
+                    }
+#---------------------------------------------------

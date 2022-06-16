@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'core',
     'Users_assets',
     'Content_and_logic',
+    'Communications',
     
     # frameworks
     'rest_framework',

@@ -3,7 +3,7 @@ from django.db import models
 from core.models import TgBot
 
 class UserTag(models.Model):
-    tag_id = models.CharField(verbose_name = 'Tag ID', max_length = 15, unique = True)
+    tag_id = models.CharField(verbose_name = 'Tag ID', max_length = 25, unique = True)
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
     caption = models.CharField(verbose_name = 'Наименование', max_length = 50)
     priority = models.IntegerField(verbose_name = 'Приоритет', default = 1)
@@ -18,7 +18,7 @@ class UserTag(models.Model):
 
 class User(models.Model):
     user_ID = models.CharField(verbose_name = 'ID', max_length = 15, unique = True)
-    tg_ID = models.CharField(verbose_name = 'Телеграм ID', max_length = 15)
+    tg_ID = models.CharField(verbose_name = 'Телеграм ID', max_length = 25)
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
     name = models.CharField(verbose_name = 'Имя', max_length = 50, default = '', null = True, blank = True)
     tg_nickname = models.CharField(verbose_name = 'Nickname в телеграм', max_length = 50)

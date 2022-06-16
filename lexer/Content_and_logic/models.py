@@ -86,7 +86,7 @@ class TypeBlock(models.Model):
 
 class Command(models.Model):
     from_bot = models.ForeignKey(TgBot, verbose_name = 'Через бота', null = True, on_delete = models.SET_NULL)
-    command_id = models.CharField(verbose_name = 'ID', max_length = 10, unique = True)
+    command_id = models.CharField(verbose_name = 'ID', max_length = 50, unique = True)
     caption = models.CharField(verbose_name = 'Команда (латиницей)', max_length = 50)
     language = models.CharField(verbose_name = 'Язык перевода', max_length = 5, choices = LANG_CHOICES, default = 'RUS')
     text = models.TextField(verbose_name = 'Текст реакции', blank = True, null = True)
