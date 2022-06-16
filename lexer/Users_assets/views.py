@@ -171,20 +171,20 @@ class CreateUser(View):
             case 'vars':
                 user_id = request.GET.get('user_id')
 
+                vars_info = {}
                 try: 
                     usr = User.objects.get(tg_ID = user_id)
                     usr_vars = Var.objects.filter(user = usr)
-                    vars_info = {}
 
                     for var in usr_vars:
                         vars_info.update({var.key:var.value})
-
-                    data.update({
-                        'status':'OK',
-                        'msg':'Done',
-                        'vars':vars_info
-                    })
-
+                        
                 except: pass
+                
+                data.update({
+                    'status':'OK',
+                    'msg':'Done',
+                    'vars':vars_info
+                })
 
         return JsonResponse(data)

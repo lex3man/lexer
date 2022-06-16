@@ -23,7 +23,7 @@ def MakeButtonsList(auth_token, bot_name):
 
 def MakeCommandList(auth_token, bot_name):
     commands_info = GetContent(bot_name, auth_token, 'commands')['commands']
-    commands_list = []
+    commands_list = ['start']
     
     for k in commands_info.keys():
         commands_list.append(k)
@@ -165,7 +165,7 @@ async def content_block(message : types.Message):
     
     if block_accessable:
         sleep(delay)
-        await message.answer(text, reply_markup = kb)
+        if text != '': await message.answer(text, reply_markup = kb)
         NB = None
         
         if tags_action['add'] != []:
@@ -175,7 +175,7 @@ async def content_block(message : types.Message):
                 'tags':tags_action['add']
             }
             t = await AsyncSetTags(BN, AT, tags_data)
-            await message.answer(t)
+            # await message.answer(t)
         
         if tags_action['remove'] != []:
             tags_data = {
@@ -184,7 +184,7 @@ async def content_block(message : types.Message):
                 'tags':tags_action['remove']
             }
             t = await AsyncSetTags(BN, AT, tags_data)
-            await message.answer(t)
+            # await message.answer(t)
         
         if kb_name == 'null': 
             if block_data['next_block'] != 'null':
@@ -238,7 +238,7 @@ async def command_react(message : types.Message):
             if condition_match: block_accessable = True
         
         if block_accessable:
-            await message.answer(text, reply_markup = kb)
+            if text != '': await message.answer(text, reply_markup = kb)
             NB = None
             
             if commands_info['commands'][cmd]['keyboard'] == 'null':

@@ -19,6 +19,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
     head = {'Authorization': 'Bearer ' + auth_token, 'Content-Type':'application/json'}
     PATH = '/content/'
     SERVER_URL = 'https://' + SERVER_HOST + PATH
+
     if isinstance(target, str):
         data = {
             'botname':bot_name,
@@ -26,6 +27,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
             'lang':'RUS',
             'block':''
         }
+
     elif isinstance(target, list):
         data = {
             'botname':bot_name,
@@ -33,6 +35,7 @@ async def AsyncGetContent(bot_name, auth_token, target):
             'head':target[0],
             'block':target[1]
         }
+
     async with aiohttp.ClientSession(headers = head) as session:
         async with session.get(SERVER_URL, params = data) as resp:
             response = await resp.json()
